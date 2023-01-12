@@ -1,0 +1,105 @@
+{
+  "textures": {
+    "mcu_heatspreader_side": "redstonemcu:block/mcu_heatspreader_side",
+    "mcu_side": "redstonemcu:block/mcu_side",
+    "mcu_base_standard": "redstonemcu:block/mcu_base_standard",
+    "mcu_base": "redstonemcu:block/mcu_base",
+    "mcu_hs_standard": "redstonemcu:block/mcu_hs_standard",
+    "particle": "redstonemcu:block/mcu_base"
+  },
+  "display": {
+    "gui": {
+      "rotation": [ 30, 45, 0 ],
+      "translation": [ 0, 0, 0 ],
+      "scale": [ 0.625, 0.625, 0.625 ]
+    },
+    "ground": {
+      "rotation": [ 0, 0, 0 ],
+      "translation": [ 0, 3, 0 ],
+      "scale": [ 0.25, 0.25, 0.25 ]
+    },
+    "fixed": {
+      "rotation": [ 0, 180, 0 ],
+      "translation": [ 0, 0, 0 ],
+      "scale": [ 1, 1, 1 ]
+    },
+    "head": {
+      "rotation": [ 0, 180, 0 ],
+      "translation": [ 0, 0, 0 ],
+      "scale": [ 1, 1, 1 ]
+    },
+    "firstperson_righthand": {
+      "rotation": [ 0, 315, 0 ],
+      "translation": [ 0, 2.5, 0 ],
+      "scale": [ 0.4, 0.4, 0.4 ]
+    },
+    "thirdperson_righthand": {
+      "rotation": [ 75, 315, 0 ],
+      "translation": [ 0, 2.5, 0 ],
+      "scale": [ 0.375, 0.375, 0.375 ]
+    }
+  },
+  "elements": [
+    {
+      "name": "Base",
+      "from": [ 0, 0, 0 ],
+      "to": [ 16, 4, 16 ],
+      "faces": {
+        "north": { "texture": "#mcu_side", "uv": [ 0, 10, 16, 16 ] },
+        "east": { "texture": "#mcu_side", "uv": [ 0, 10, 16, 16 ] },
+        "south": { "texture": "#mcu_side", "uv": [ 0, 10, 16, 16 ] },
+        "west": { "texture": "#mcu_side", "uv": [ 0, 10, 16, 16 ] },
+        "up": { "texture": "#mcu_base_standard", "uv": [ 0, 0, 16, 16 ] },
+        "down": { "texture": "#mcu_base", "uv": [ 0, 0, 16, 16 ] }
+      }
+    },
+    {
+      "name": "HeatSpreaderTop",
+      "from": [ 3, 4, 3 ],
+      "to": [ 13, 5, 13 ],
+      "faces": {
+        "up": { "texture": "#mcu_hs_standard", "uv": [ 2, 2, 14, 14 ] }
+      }
+    },
+    {
+      "name": "HeatSpreaderWest",
+      "from": [ 2, 4, 3 ],
+      "to": [ 3, 5, 13 ],
+      "faces": {
+        "west": { "texture": "#mcu_heatspreader_side", "uv": [ 0, 14, 10, 15 ] },
+        "up": { "texture": "#mcu_heatspreader_side", "uv": [ 1, 14, 2, 16 ] }
+      }
+    },
+    {
+      "name": "HeatSpreaderEast",
+      "from": [ 13, 4, 3 ],
+      "to": [ 14, 5, 13 ],
+      "faces": {
+        "east": { "texture": "#mcu_heatspreader_side", "uv": [ 1, 14, 11, 15 ] },
+        "up": { "texture": "#mcu_heatspreader_side", "uv": [ 1, 14, 2, 16 ] }
+      }
+    },
+    {
+      "name": "HeatSpreaderNorth",
+      "from": [ 2, 4, 2 ],
+      "to": [ 14, 5, 3 ],
+      "faces": {
+        "north": { "texture": "#mcu_heatspreader_side", "uv": [ 0, 14, 12, 15 ] },
+        "east": { "texture": "#mcu_heatspreader_side", "uv": [ 1, 14, 2, 15 ] },
+        "west": { "texture": "#mcu_heatspreader_side", "uv": [ 0, 14, 1, 15 ] },
+        "up": { "texture": "#mcu_heatspreader_side", "uv": [ 1, 14, 2, 16 ] }
+      }
+    },
+    {
+      "name": "HeatSpreaderSouth",
+      "from": [ 2, 4, 13 ],
+      "to": [ 14, 5, 14 ],
+      "faces": {
+        "east": { "texture": "#mcu_heatspreader_side", "uv": [ 1, 14, 2, 15 ] },
+        "south": { "texture": "#mcu_heatspreader_side", "uv": [ 0, 14, 12, 15 ] },
+        "west": { "texture": "#mcu_heatspreader_side", "uv": [ 0, 14, 1, 15 ] },
+        "up": { "texture": "#mcu_heatspreader_side", "uv": [ 1, 14, 2, 16 ] }
+      }
+    }
+  ]
+}

@@ -61,7 +61,7 @@ public class BlockEntityMcu extends BlockEntity implements Tickable {
                     } else {
                         p.setRedstonePowerLevel(0);
                     }
-                } 
+                }
             }
         }
     }

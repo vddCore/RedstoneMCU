@@ -3,7 +3,6 @@ package eu.vddcore.mods.redstonemcu;
 import eu.vddcore.mods.redstonemcu.blockentity.BlockEntityMcu;
 import eu.vddcore.mods.redstonemcu.block.BlockMcu;
 import eu.vddcore.mods.redstonemcu.items.ItemMcuDebugger;
-import eu.vddcore.mods.redstonemcu.items.ItemMcuOverclocked;
 import eu.vddcore.mods.redstonemcu.items.ItemMcuStandard;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.object.builder.v1.block.FabricBlockSettings;
@@ -21,13 +20,11 @@ public class RedstoneMcu implements ModInitializer {
     public static BlockEntityType<BlockEntityMcu> BLOCK_MCU_ENTITY;
 
     public static ItemMcuStandard ITEM_MCU_STANDARD = new ItemMcuStandard(BLOCK_MCU, new Item.Settings().group(ItemGroup.REDSTONE));
-    public static ItemMcuOverclocked ITEM_MCU_OVERCLOCKED = new ItemMcuOverclocked(BLOCK_MCU, new Item.Settings().group(ItemGroup.REDSTONE));
     public static ItemMcuDebugger ITEM_MCU_DEBUGGER = new ItemMcuDebugger(new Item.Settings().group(ItemGroup.MISC));
 
     @Override
     public void onInitialize() {
         Registry.register(Registry.ITEM, new Identifier(MOD_ID, "mcu_standard"), ITEM_MCU_STANDARD);
-        Registry.register(Registry.ITEM, new Identifier(MOD_ID, "mcu_overclocked"), ITEM_MCU_OVERCLOCKED);
         Registry.register(Registry.ITEM, new Identifier(MOD_ID, "mcu_debugger"), ITEM_MCU_DEBUGGER);
 
         Registry.register(Registry.BLOCK, new Identifier(MOD_ID, "mcu_block_standard"), BLOCK_MCU);

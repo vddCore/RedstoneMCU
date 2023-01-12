@@ -1,0 +1,5 @@
+{
+  "variants": {
+    "": { "model": "redstonemcu:block/mcu_block_standard" }
+  }
+}

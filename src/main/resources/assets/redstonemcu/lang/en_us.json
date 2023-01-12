@@ -1,5 +1,4 @@
 {
   "item.redstonemcu.mcu_standard": "Standard MCU",
-  "item.redstonemcu.mcu_overclocked": "Overclocked MCU",
   "item.redstonemcu.mcu_debugger": "Advanced Microcontroller Debugger"
 }

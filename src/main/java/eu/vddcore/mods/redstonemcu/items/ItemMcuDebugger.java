@@ -85,7 +85,7 @@ public class ItemMcuDebugger extends Item {
             return new TypedActionResult<>(ActionResult.PASS, user.getStackInHand(hand));
 
         operationMode = DebuggerOperationMode.values()[(operationMode.ordinal() + 1) % DebuggerOperationMode.values().length];
-        user.sendMessage(new LiteralText("set operation mode to" + operationMode.toString()), true);
+        user.sendMessage(new LiteralText("set operation mode to " + operationMode.toString()), true);
 
         return new TypedActionResult<>(ActionResult.PASS, user.getStackInHand(hand));
     }
