@@ -1,10 +1,12 @@
 package eu.vddcore.mods.redstonemcu.gui.widget;
 
+import eu.vddcore.mods.redstonemcu.gui.widget.editor.*;
+import eu.vddcore.mods.redstonemcu.gui.widget.editor.commands.EditionCommands;
+import eu.vddcore.mods.redstonemcu.gui.widget.editor.commands.NavigationCommands;
 import io.github.cottonmc.cotton.gui.GuiDescription;
 import io.github.cottonmc.cotton.gui.client.Scissors;
 import io.github.cottonmc.cotton.gui.client.ScreenDrawing;
 import io.github.cottonmc.cotton.gui.widget.WPanel;
-import io.github.cottonmc.cotton.gui.widget.WScrollBar;
 import io.github.cottonmc.cotton.gui.widget.WWidget;
 import io.github.cottonmc.cotton.gui.widget.data.Axis;
 import net.fabricmc.api.EnvType;
@@ -15,41 +17,34 @@ import net.minecraft.client.util.math.MatrixStack;
 import org.lwjgl.glfw.GLFW;
 
 public class WCodeEditor extends WPanel {
-    private final int CARET_BLINK_THRESHOLD = 10;
-    private final int CARET_THICKNESS = 1;
-
-    // --- these will eventually go as a settable things
-    private final int EDITOR_BACKGROUND = 0xFF1E1E1E;
-    private final int EDITOR_FOREGROUND = 0xFFCCCCCC;
-    private final int EDITOR_CARET_COLOR = 0xFFCCCCCC;
-    private final int EDITOR_BORDER_FOCUS_COLOR = 0xFF007ACC;
-    private final int EDITOR_BORDER_NORMAL_COLOR = 0xFFFFFFFF;
-    private final int EDITOR_LINE_HIGHLIGHT_COLOR = 0x11FFFFFF;
-
-    private final int TAB_SIZE = 2;
-    private final int BORDER_THICKNESS = 1;
-    private final int LINE_SPACING = 1;
-    private final int MARGIN_X = 4;
-    private final int MARGIN_Y = 4;
-    private final boolean AUTOINDENT = true;
-    private final boolean HIGHLIGHT_CURRENT_LINE = true;
-    // ---
-
     private final CodeBuffer buffer;
-
-    private WNonFocusableScrollBar verticalScrollBar;
+    private final WNonFocusableScrollBar verticalScrollBar;
+    private final TextRenderer textRenderer;
 
     private int caretTicker = 0;
     private boolean drawCaret = false;
-    private int currentBorderColor = EDITOR_BORDER_NORMAL_COLOR;
+    private int currentBorderColor;
+
+    public final EditorColors colors;
+    public final EditorOptions options;
 
     public WCodeEditor() {
         super();
 
+        colors = new EditorColors();
+        options = new EditorOptions();
         buffer = new CodeBuffer(this);
+
+        textRenderer = MinecraftClient.getInstance().textRenderer;
+
+        NavigationCommands.registerAll();
+        EditionCommands.registerAll();
+
+        currentBorderColor = colors.borderNormal;
 
         verticalScrollBar = new WNonFocusableScrollBar(Axis.VERTICAL);
         verticalScrollBar.setValue(0);
+
         children.add(verticalScrollBar);
     }
 
@@ -68,51 +63,47 @@ public class WCodeEditor extends WPanel {
     }
 
     public int getMaxDisplayableLines() {
-        TextRenderer textRenderer = MinecraftClient.getInstance().textRenderer;
-
-        int heightPerLine = textRenderer.fontHeight + LINE_SPACING;
-        int usableHeight = getHeight() - MARGIN_Y * 2 - BORDER_THICKNESS * 2;
+        int heightPerLine = textRenderer.fontHeight + options.lineSpacing;
+        int usableHeight = getHeight() - options.verticalMargin * 2 - options.borderThickness * 2;
 
         return usableHeight / heightPerLine;
     }
 
-    public void forceMoveScrollBar(int value) {
+    public void scrollTo(int value) {
         verticalScrollBar.setValue(value);
     }
 
     @Override
     @Environment(EnvType.CLIENT)
     public void paint(MatrixStack matrices, int x, int y, int mouseX, int mouseY) {
-        TextRenderer textRenderer = MinecraftClient.getInstance().textRenderer;
-
         buffer.setWindowTop(verticalScrollBar.getValue());
 
         int caretX = textRenderer.getWidth(buffer.getCurrentLine().textUntilCaret());
-        int caretY = (buffer.getCurrentLineIndex() - buffer.getWindowTop()) * (textRenderer.fontHeight + LINE_SPACING);
+        int caretY = (buffer.getCurrentLineIndex() - buffer.getWindowTop()) * (textRenderer.fontHeight + options.lineSpacing);
 
         ScreenDrawing.coloredRect(x, y, getWidth(), getHeight(), currentBorderColor);
         ScreenDrawing.coloredRect(
-            x + BORDER_THICKNESS,
-            y + BORDER_THICKNESS,
-            getWidth() - BORDER_THICKNESS * 2 - verticalScrollBar.getWidth(),
-            getHeight() - BORDER_THICKNESS * 2,
-            EDITOR_BACKGROUND
+            x + options.borderThickness,
+            y + options.borderThickness,
+            getWidth() - options.borderThickness * 2 - verticalScrollBar.getWidth(),
+            getHeight() - options.borderThickness * 2,
+            colors.background
         );
 
         Scissors.push(
-            x + BORDER_THICKNESS + MARGIN_X - 1,
-            y + BORDER_THICKNESS + MARGIN_Y,
-            getWidth() - BORDER_THICKNESS * 2 - MARGIN_X * 2,
-            getHeight() - BORDER_THICKNESS * 2 - MARGIN_Y * 2
+            x + options.borderThickness + options.horizontalMargin - 1,
+            y + options.borderThickness + options.verticalMargin,
+            getWidth() - options.borderThickness * 2 - options.horizontalMargin * 2,
+            getHeight() - options.borderThickness * 2 - options.verticalMargin * 2
         );
 
-        if (HIGHLIGHT_CURRENT_LINE) {
+        if (options.highlightCurrentLine) {
             ScreenDrawing.coloredRect(
-                x + MARGIN_X + BORDER_THICKNESS,
-                y + caretY + MARGIN_Y + BORDER_THICKNESS - 1,
-                getWidth() - (MARGIN_X + BORDER_THICKNESS) * 2 - verticalScrollBar.getWidth(),
+                x + options.horizontalMargin + options.borderThickness,
+                y + caretY + options.verticalMargin + options.borderThickness - 1,
+                getWidth() - (options.horizontalMargin + options.borderThickness) * 2 - verticalScrollBar.getWidth(),
                 textRenderer.fontHeight + 1,
-                EDITOR_LINE_HIGHLIGHT_COLOR
+                colors.lineHighlighter
             );
         }
 
@@ -128,19 +119,19 @@ public class WCodeEditor extends WPanel {
             ScreenDrawing.drawString(
                 matrices,
                 line.getText(),
-                x + MARGIN_X + BORDER_THICKNESS + 1,
-                y + (i * (textRenderer.fontHeight + LINE_SPACING)) + MARGIN_Y + BORDER_THICKNESS + 1,
-                EDITOR_FOREGROUND
+                x + options.horizontalMargin + options.borderThickness + 1,
+                y + (i * (textRenderer.fontHeight + options.lineSpacing)) + options.verticalMargin + options.borderThickness + 1,
+                colors.foreground
             );
         }
 
         if (drawCaret && isFocused()) {
             ScreenDrawing.coloredRect(
-                x + caretX + MARGIN_X + BORDER_THICKNESS,
-                y + caretY + MARGIN_Y + BORDER_THICKNESS - 1,
-                CARET_THICKNESS,
+                x + caretX + options.horizontalMargin + options.borderThickness,
+                y + caretY + options.verticalMargin + options.borderThickness - 1,
+                options.caretThickness,
                 textRenderer.fontHeight + 1,
-                EDITOR_CARET_COLOR
+                colors.caret
             );
         }
         Scissors.pop();
@@ -152,27 +143,45 @@ public class WCodeEditor extends WPanel {
     public void tick() {
         super.tick();
 
-        if (caretTicker > CARET_BLINK_THRESHOLD) {
+        if (caretTicker > options.caretBlinkingFrequency) {
             caretTicker = 0;
             drawCaret = !drawCaret;
         } else {
             caretTicker++;
         }
 
-        verticalScrollBar.setMaxValue(buffer.getLineCount());
-        verticalScrollBar.setWindow(MinecraftClient.getInstance().textRenderer.fontHeight + MARGIN_Y + BORDER_THICKNESS + LINE_SPACING + 2);
+        verticalScrollBar.setWindow(
+            textRenderer.fontHeight +
+                options.verticalMargin +
+                options.borderThickness +
+                options.lineSpacing + 2
+        );
     }
 
     @Override
     public void validate(GuiDescription host) {
         super.validate(host);
+
         verticalScrollBar.setSize(18, getHeight());
         verticalScrollBar.setLocation(getWidth() - verticalScrollBar.getWidth(), 0);
+        verticalScrollBar.setMaxValue(buffer.getLineCount());
     }
 
     @Override
     public void onClick(int x, int y, int button) {
         super.onClick(x, y, button);
+
+        int clickableArea = options.borderThickness + options.verticalMargin;
+        if (y > clickableArea && y < getHeight() - clickableArea * 2) {
+            int index = y / textRenderer.fontHeight - 1;
+
+            if (index < 0)
+                index = 0;
+
+            if (index < buffer.getLineCount()) {
+                buffer.setCurrentLineIndex(buffer.getWindowTop() + index);
+            }
+        }
 
         if (button == GLFW.GLFW_MOUSE_BUTTON_1) {
             requestFocus();
@@ -186,40 +195,12 @@ public class WCodeEditor extends WPanel {
         caretTicker = 0;
         drawCaret = true;
 
-        switch (ch) {
-            case GLFW.GLFW_KEY_LEFT:
-                handleCursorLeft();
-                break;
-            case GLFW.GLFW_KEY_RIGHT:
-                handleCursorRight();
-                break;
-            case GLFW.GLFW_KEY_DOWN:
-                handleCursorDown();
-                break;
-            case GLFW.GLFW_KEY_UP:
-                handleCursorUp();
-                break;
-            case GLFW.GLFW_KEY_BACKSPACE:
-                handleBackspace();
-                break;
-            case GLFW.GLFW_KEY_DELETE:
-                handleDelete();
-                break;
-            case GLFW.GLFW_KEY_HOME:
-                buffer.getCurrentLine().goToStart();
-                break;
-            case GLFW.GLFW_KEY_END:
-                buffer.getCurrentLine().goToEnd();
-                break;
-            case GLFW.GLFW_KEY_ENTER:
-            case GLFW.GLFW_KEY_KP_ENTER:
-                handleEnter();
-                break;
-            case GLFW.GLFW_KEY_TAB:
-                // tab doesn't work at all in this place, but see below...
-                break;
-        }
+        KeyCommand cmd = KeyCommandRegistry.get(modifiers, ch);
 
+        if (cmd != null)
+            cmd.handler.handle(this, buffer);
+
+        verticalScrollBar.setMaxValue(buffer.getLineCount());
         buffer.updateViewport();
     }
 
@@ -237,147 +218,36 @@ public class WCodeEditor extends WPanel {
     @Override
     public void onFocusGained() {
         super.onFocusGained();
-        currentBorderColor = EDITOR_BORDER_FOCUS_COLOR;
+        currentBorderColor = colors.borderFocused;
     }
 
     @Override
     public void onFocusLost() {
         super.onFocusLost();
-        currentBorderColor = EDITOR_BORDER_NORMAL_COLOR;
+        currentBorderColor = colors.borderNormal;
     }
 
-    private void handleCursorLeft() {
-        CodeBufferLine currentLine = buffer.getCurrentLine();
-        if (currentLine.isCaretAtStart()) {
-            if (buffer.isAtFirstLine()) return;
-            currentLine = buffer.goToPreviousLine();
-            currentLine.goToEnd();
-        } else {
-            currentLine.moveCaretLeft();
-        }
-    }
+    @Override
+    public void onMouseScroll(int x, int y, double amount) {
+        super.onMouseScroll(x, y, amount);
 
-    private void handleCursorRight() {
-        CodeBufferLine currentLine = buffer.getCurrentLine();
-
-        if (currentLine.isCaretAtEnd()) {
-            if (buffer.isAtLastLine()) return;
-            currentLine = buffer.goToNextLine();
-            currentLine.goToStart();
-        } else {
-            currentLine.moveCaretRight();
-        }
-    }
-
-    private void handleCursorUp() {
-        CodeBufferLine currentLine = buffer.getCurrentLine();
-
-        if (buffer.isAtFirstLine()) {
-            currentLine.goToStart();
-        } else {
-            int caretPosition = currentLine.getCaretPosition();
-            boolean wasAtEnd = currentLine.isCaretAtEnd();
-
-            currentLine = buffer.goToPreviousLine();
-
-            if (!wasAtEnd) {
-                if (caretPosition >= currentLine.getText().length()) {
-                    currentLine.goToEnd();
-                } else {
-                    currentLine.setCaretPosition(caretPosition);
-                }
-            } else if (currentLine.getText().length() >= caretPosition) {
-                currentLine.setCaretPosition(caretPosition);
-            }
-        }
-    }
-
-    private void handleCursorDown() {
-        CodeBufferLine currentLine = buffer.getCurrentLine();
-
-        if (buffer.isAtLastLine()) {
-            currentLine.goToEnd();
-        } else {
-            int caretPosition = currentLine.getCaretPosition();
-            boolean wasAtEnd = currentLine.isCaretAtEnd();
-
-            currentLine = buffer.goToNextLine();
-
-            if (!wasAtEnd) {
-                if (caretPosition >= currentLine.getText().length()) {
-                    currentLine.goToEnd();
-                } else {
-                    currentLine.setCaretPosition(caretPosition);
-                }
-            } else if (currentLine.getText().length() >= caretPosition) {
-                currentLine.setCaretPosition(caretPosition);
-            } else {
-                currentLine.goToEnd();
-            }
-        }
-    }
-
-    private void handleBackspace() {
-        CodeBufferLine currentLine = buffer.getCurrentLine();
-
-        if (currentLine.isCaretAtStart()) {
-            if (buffer.isAtFirstLine()) return;
-
-            String text = currentLine.getText();
-            buffer.removeLine();
-            currentLine = buffer.getCurrentLine();
-            currentLine.goToEnd();
-            currentLine.appendText(text);
-        } else if (currentLine.isCaretAtEnd()) {
-            currentLine.removeFromEnd();
-            currentLine.moveCaretLeft();
-        } else {
-            currentLine.removeAtCaret(true);
-        }
-    }
-
-    private void handleDelete() {
-        CodeBufferLine line = buffer.getCurrentLine();
-
-        if (line.isCaretAtEnd()) {
-            if (buffer.isAtLastLine()) return;
-
-            CodeBufferLine nextLine = buffer.goToNextLine();
-            line.appendText(nextLine.getText());
-            buffer.removeLine();
-        } else {
-            line.removeAtCaret(false);
-        }
-    }
-
-    private void handleEnter() {
-        CodeBufferLine currentLine = buffer.getCurrentLine();
-        int indentCount = currentLine.getIndentCount();
-
-        if (currentLine.isCaretAtEnd()) {
-            buffer.insertNewLineAfterCurrent(true);
-
-            if (AUTOINDENT) {
-                buffer.getCurrentLine().indentAtCaret(indentCount);
-            }
-        } else if (currentLine.isCaretAtStart()) {
-            buffer.insertNewLineBeforeCurrent(true);
-        } else {
-            String text = currentLine.textFromCaretOnwards();
-            currentLine.setText(currentLine.textUntilCaret());
-
-            buffer.insertNewLineAfterCurrent(true);
-            currentLine = buffer.getCurrentLine();
-            currentLine.appendText(text);
+        if (amount > 0) {
+            scrollTo(verticalScrollBar.getValue() - 1);
+        } else if (amount < 0) {
+            scrollTo(verticalScrollBar.getValue() + 1);
         }
     }
 
     private void handleTab(boolean shiftPressed) {
-        if (!shiftPressed) {
-            buffer.getCurrentLine().indentAtCaret(TAB_SIZE);
-        } else {
-            buffer.getCurrentLine().unindent(TAB_SIZE);
-        }
+        int modifier = 0;
+
+        if (shiftPressed)
+            modifier = GLFW.GLFW_MOD_SHIFT;
+
+        KeyCommand cmd = KeyCommandRegistry.get(modifier, GLFW.GLFW_KEY_TAB);
+
+        if (cmd != null)
+            cmd.handler.handle(this, buffer);
     }
 
     private void handlePrintable(char c) {

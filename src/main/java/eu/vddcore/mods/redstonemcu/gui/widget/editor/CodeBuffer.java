@@ -1,4 +1,6 @@
-package eu.vddcore.mods.redstonemcu.gui.widget;
+package eu.vddcore.mods.redstonemcu.gui.widget.editor;
+
+import eu.vddcore.mods.redstonemcu.gui.widget.WCodeEditor;
 
 import java.util.ArrayList;
 import java.util.stream.Collectors;
@@ -72,12 +74,12 @@ public class CodeBuffer {
     public void updateViewport() {
         while (currentLineIndex - currentWindowTop >= editor.getMaxDisplayableLines()) {
             moveWindowDown();
-            editor.forceMoveScrollBar(currentWindowTop);
+            editor.scrollTo(currentWindowTop);
         }
 
         while (currentLineIndex - currentWindowTop < 0) {
             moveWindowUp();
-            editor.forceMoveScrollBar(currentWindowTop);
+            editor.scrollTo(currentWindowTop);
         }
     }
 
@@ -102,6 +104,10 @@ public class CodeBuffer {
 
     public int getCurrentLineIndex() {
         return currentLineIndex;
+    }
+
+    public void setCurrentLineIndex(int index) {
+        currentLineIndex = index;
     }
 
     public String getText() {

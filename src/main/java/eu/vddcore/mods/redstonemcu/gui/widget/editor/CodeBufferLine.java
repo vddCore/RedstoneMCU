@@ -1,4 +1,4 @@
-package eu.vddcore.mods.redstonemcu.gui.widget;
+package eu.vddcore.mods.redstonemcu.gui.widget.editor;
 
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
