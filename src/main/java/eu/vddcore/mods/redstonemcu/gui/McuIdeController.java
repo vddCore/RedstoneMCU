@@ -92,6 +92,7 @@ public class McuIdeController extends SyncedGuiDescription {
 
         WCodeEditor codeEditor = new WCodeEditor();
         WLabel codeEditorTitle = new WLabel("ROM Chip Assembly");
+
         root.add(codeEditorTitle, 6, 1);
         root.add(codeEditor, 6, 2, 12, 8);
         root.validate(this);

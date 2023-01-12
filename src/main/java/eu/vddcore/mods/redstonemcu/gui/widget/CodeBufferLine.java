@@ -1,8 +1,12 @@
 package eu.vddcore.mods.redstonemcu.gui.widget;
 
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
+import net.minecraft.client.MinecraftClient;
+
 public class CodeBufferLine {
-    public String text = "";
-    public int caretPosition = 0;
+    private String text = "";
+    private int caretPosition = 0;
 
     public void insertAt(int i, char c) {
         String pre = text.substring(0, i);
@@ -20,8 +24,29 @@ public class CodeBufferLine {
         setText(pre + post);
     }
 
+    public void appendText(String text) {
+        this.text += text;
+    }
+
+    @Environment(EnvType.CLIENT)
+    public int getTextPixelWidth() {
+        return MinecraftClient.getInstance().textRenderer.getWidth(text);
+    }
+
     public void setText(String text) {
         this.text = text;
+    }
+
+    public String getText() {
+        return this.text;
+    }
+
+    public int getCaretPosition() {
+        return this.caretPosition;
+    }
+
+    public void setCaretPosition(int caretPosition) {
+        this.caretPosition = caretPosition;
     }
 
     public String textFromCaretOnwards() {
@@ -32,8 +57,9 @@ public class CodeBufferLine {
         return text.substring(0, caretPosition);
     }
 
-    public void removeAtCaret() {
-        removeAt(--caretPosition);
+    public void removeAtCaret(boolean moveCaretPosition) {
+        if (moveCaretPosition) --caretPosition;
+        removeAt(caretPosition);
     }
 
     public void removeFromEnd() {
@@ -68,7 +94,35 @@ public class CodeBufferLine {
         caretPosition = 0;
     }
 
-    public void mergeWith(String text) {
-        this.text += text;
+    public void indentAtCaret(int tabSize) {
+        for (int i = 0; i < tabSize; i++) {
+            insertAtCaret(' ');
+        }
+    }
+
+    public void indent(int tabSize) {
+        for (int i = 0; i < tabSize; i++) {
+            insertAt(0, ' ');
+        }
+    }
+
+    public void unindent(int tabSize) {
+        for (int i = 0; i < tabSize && text.length() > 0; i++) {
+            if (text.charAt(0) == ' ') {
+                text = text.substring(1);
+                moveCaretLeft();
+            } else break;
+        }
+    }
+
+    public int getIndentCount() {
+        int indentCount = 0;
+        for (int i = 0; i < text.length(); i++) {
+            if (text.charAt(i) == ' ')
+                indentCount++;
+            else break;
+        }
+
+        return indentCount;
     }
 }

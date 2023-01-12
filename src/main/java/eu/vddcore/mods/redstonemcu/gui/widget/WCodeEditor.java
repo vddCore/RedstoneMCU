@@ -14,20 +14,37 @@ public class WCodeEditor extends WWidget {
     private final int CARET_BLINK_THRESHOLD = 10;
     private final int CARET_THICKNESS = 1;
 
+    // --- these will eventually go as a settable things
     private final int EDITOR_BACKGROUND = 0xFF1E1E1E;
     private final int EDITOR_FOREGROUND = 0xFFCCCCCC;
     private final int EDITOR_CARET_COLOR = 0xFFCCCCCC;
+    private final int EDITOR_BORDER_FOCUS_COLOR = 0xFF007ACC;
+    private final int EDITOR_BORDER_NORMAL_COLOR = 0xFFFFFFFF;
+    private final int EDITOR_LINE_HIGHLIGHT_COLOR = 0x11FFFFFF;
 
+    private final int TAB_SIZE = 2;
+    private final int BORDER_THICKNESS = 1;
     private final int LINE_SPACING = 1;
     private final int MARGIN_X = 4;
-    private final int MARGIN_Y = 6;
+    private final int MARGIN_Y = 4;
+    private final boolean AUTOINDENT = true;
+    private final boolean HIGHLIGHT_CURRENT_LINE = true;
+    // ---
 
     private final CodeBuffer buffer;
+
     private int caretTicker = 0;
     private boolean drawCaret = false;
+    private int currentBorderColor = EDITOR_BORDER_NORMAL_COLOR;
 
     public WCodeEditor() {
         buffer = new CodeBuffer();
+    }
+
+    @Override
+    public WWidget cycleFocus(boolean lookForwards) {
+        handleTab(!lookForwards);
+        return this;
     }
 
     @Override
@@ -40,26 +57,64 @@ public class WCodeEditor extends WWidget {
         return true;
     }
 
-    @Environment(EnvType.CLIENT)
+    public String getText() {
+        return buffer.getText();
+    }
+
     @Override
+    @Environment(EnvType.CLIENT)
     public void paint(MatrixStack matrices, int x, int y, int mouseX, int mouseY) {
         TextRenderer textRenderer = MinecraftClient.getInstance().textRenderer;
         int lineCount = buffer.getLineCount();
 
-        ScreenDrawing.coloredRect(x, y, getWidth(), getHeight(), 0xFFFFFFFF);
-        ScreenDrawing.coloredRect(x + 2, y + 2, getWidth() - 4, getHeight() - 4, EDITOR_BACKGROUND);
+        ScreenDrawing.coloredRect(x, y, getWidth(), getHeight(), currentBorderColor);
+        ScreenDrawing.coloredRect(
+            x + BORDER_THICKNESS,
+            y + BORDER_THICKNESS,
+            getWidth() - BORDER_THICKNESS * 2,
+            getHeight() - BORDER_THICKNESS * 2,
+            EDITOR_BACKGROUND
+        );
 
-        Scissors.push(x + 2, y + 2, getWidth() - 4, getHeight() - 4);
+        Scissors.push(
+            x + BORDER_THICKNESS + MARGIN_X - 1,
+            y + BORDER_THICKNESS + MARGIN_Y,
+            getWidth() - BORDER_THICKNESS * 2 - MARGIN_X * 2,
+            getHeight() - BORDER_THICKNESS * 2 - MARGIN_Y * 2
+        );
+
+        if (HIGHLIGHT_CURRENT_LINE) {
+            ScreenDrawing.coloredRect(
+                x + MARGIN_X + BORDER_THICKNESS,
+                (y + MARGIN_Y + BORDER_THICKNESS + LINE_SPACING * buffer.getCurrentLineIndex() + buffer.getCurrentLineIndex() * textRenderer.fontHeight) - 1,
+                getWidth() - (MARGIN_X + BORDER_THICKNESS) * 2,
+                textRenderer.fontHeight + 1,
+                EDITOR_LINE_HIGHLIGHT_COLOR
+            );
+        }
+
         for (int i = 0; i < lineCount; i++) {
             CodeBufferLine line = buffer.getLine(i);
-            ScreenDrawing.drawString(matrices, line.text, x + MARGIN_X, y + (i * (textRenderer.fontHeight + LINE_SPACING)) + MARGIN_Y, EDITOR_FOREGROUND);
+            ScreenDrawing.drawString(
+                matrices,
+                line.getText(),
+                x + MARGIN_X + BORDER_THICKNESS + 1,
+                y + (i * (textRenderer.fontHeight + LINE_SPACING)) + MARGIN_Y + BORDER_THICKNESS + 1,
+                EDITOR_FOREGROUND
+            );
         }
 
         if (drawCaret && isFocused()) {
             int caretX = textRenderer.getWidth(buffer.getCurrentLine().textUntilCaret());
             int caretY = buffer.getCurrentLineIndex() * (textRenderer.fontHeight + LINE_SPACING);
 
-            ScreenDrawing.coloredRect(x + caretX + MARGIN_X, y + caretY + MARGIN_Y - 1, CARET_THICKNESS, textRenderer.fontHeight, EDITOR_CARET_COLOR);
+            ScreenDrawing.coloredRect(
+                x + caretX + MARGIN_X + BORDER_THICKNESS,
+                y + caretY + MARGIN_Y + BORDER_THICKNESS - 1,
+                CARET_THICKNESS,
+                textRenderer.fontHeight + 1,
+                EDITOR_CARET_COLOR
+            );
         }
         Scissors.pop();
     }
@@ -108,6 +163,9 @@ public class WCodeEditor extends WWidget {
             case GLFW.GLFW_KEY_BACKSPACE:
                 handleBackspace();
                 break;
+            case GLFW.GLFW_KEY_DELETE:
+                handleDelete();
+                break;
             case GLFW.GLFW_KEY_HOME:
                 buffer.getCurrentLine().goToStart();
                 break;
@@ -118,6 +176,9 @@ public class WCodeEditor extends WWidget {
             case GLFW.GLFW_KEY_KP_ENTER:
                 handleEnter();
                 break;
+            case GLFW.GLFW_KEY_TAB:
+                // tab doesn't work at all.
+                break;
         }
     }
 
@@ -126,11 +187,24 @@ public class WCodeEditor extends WWidget {
         handlePrintable(ch);
     }
 
+    @Override
+    public void onFocusGained() {
+        super.onFocusGained();
+        currentBorderColor = EDITOR_BORDER_FOCUS_COLOR;
+    }
+
+    @Override
+    public void onFocusLost() {
+        super.onFocusLost();
+        currentBorderColor = EDITOR_BORDER_NORMAL_COLOR;
+    }
+
     private void handleCursorLeft() {
         CodeBufferLine currentLine = buffer.getCurrentLine();
         if (currentLine.isCaretAtStart()) {
             if (buffer.isAtFirstLine()) return;
-            buffer.previousLine();
+            currentLine = buffer.goToPreviousLine();
+            currentLine.goToEnd();
         } else {
             currentLine.moveCaretLeft();
         }
@@ -141,8 +215,8 @@ public class WCodeEditor extends WWidget {
 
         if (currentLine.isCaretAtEnd()) {
             if (buffer.isAtLastLine()) return;
-
-            buffer.nextLine();
+            currentLine = buffer.goToNextLine();
+            currentLine.goToStart();
         } else {
             currentLine.moveCaretRight();
         }
@@ -154,7 +228,20 @@ public class WCodeEditor extends WWidget {
         if (buffer.isAtFirstLine()) {
             currentLine.goToStart();
         } else {
-            buffer.previousLine();
+            int caretPosition = currentLine.getCaretPosition();
+            boolean wasAtEnd = currentLine.isCaretAtEnd();
+
+            currentLine = buffer.goToPreviousLine();
+
+            if (!wasAtEnd) {
+                if (caretPosition >= currentLine.getText().length()) {
+                    currentLine.goToEnd();
+                } else {
+                    currentLine.setCaretPosition(caretPosition);
+                }
+            } else if (currentLine.getText().length() >= caretPosition) {
+                currentLine.setCaretPosition(caretPosition);
+            }
         }
     }
 
@@ -164,7 +251,22 @@ public class WCodeEditor extends WWidget {
         if (buffer.isAtLastLine()) {
             currentLine.goToEnd();
         } else {
-            buffer.nextLine();
+            int caretPosition = currentLine.getCaretPosition();
+            boolean wasAtEnd = currentLine.isCaretAtEnd();
+
+            currentLine = buffer.goToNextLine();
+
+            if (!wasAtEnd) {
+                if (caretPosition >= currentLine.getText().length()) {
+                    currentLine.goToEnd();
+                } else {
+                    currentLine.setCaretPosition(caretPosition);
+                }
+            } else if (currentLine.getText().length() >= caretPosition) {
+                currentLine.setCaretPosition(caretPosition);
+            } else {
+                currentLine.goToEnd();
+            }
         }
     }
 
@@ -174,37 +276,66 @@ public class WCodeEditor extends WWidget {
         if (currentLine.isCaretAtStart()) {
             if (buffer.isAtFirstLine()) return;
 
-            String text = currentLine.text;
+            String text = currentLine.getText();
             buffer.removeLine();
             currentLine = buffer.getCurrentLine();
             currentLine.goToEnd();
-            currentLine.mergeWith(text);
+            currentLine.appendText(text);
         } else if (currentLine.isCaretAtEnd()) {
             currentLine.removeFromEnd();
             currentLine.moveCaretLeft();
         } else {
-            currentLine.removeAtCaret();
+            currentLine.removeAtCaret(true);
+        }
+    }
+
+    private void handleDelete() {
+        CodeBufferLine line = buffer.getCurrentLine();
+
+        if (line.isCaretAtEnd()) {
+            if (buffer.isAtLastLine()) return;
+
+            CodeBufferLine nextLine = buffer.goToNextLine();
+            line.appendText(nextLine.getText());
+            buffer.removeLine();
+        } else {
+            line.removeAtCaret(false);
         }
     }
 
     private void handleEnter() {
         CodeBufferLine currentLine = buffer.getCurrentLine();
+        int indentCount = currentLine.getIndentCount();
+
         if (currentLine.isCaretAtEnd()) {
             buffer.insertNewLineAfterCurrent(true);
+
+            if (AUTOINDENT) {
+                buffer.getCurrentLine().indentAtCaret(indentCount);
+            }
         } else if (currentLine.isCaretAtStart()) {
-            buffer.insertNewLineBeforeCurent(true);
+            buffer.insertNewLineBeforeCurrent(true);
         } else {
             String text = currentLine.textFromCaretOnwards();
             currentLine.setText(currentLine.textUntilCaret());
 
             buffer.insertNewLineAfterCurrent(true);
             currentLine = buffer.getCurrentLine();
-            currentLine.mergeWith(text);
+            currentLine.appendText(text);
+        }
+    }
+
+    private void handleTab(boolean shiftPressed) {
+        if (!shiftPressed) {
+            buffer.getCurrentLine().indentAtCaret(TAB_SIZE);
+        } else {
+            buffer.getCurrentLine().unindent(TAB_SIZE);
         }
     }
 
     private void handlePrintable(char c) {
         CodeBufferLine currentLine = buffer.getCurrentLine();
+
         currentLine.insertAtCaret(c);
     }
 }

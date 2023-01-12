@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.stream.Collectors;
 
 public class CodeBuffer {
-    private ArrayList<CodeBufferLine> lines;
+    private final ArrayList<CodeBufferLine> lines;
     private int currentLineIndex;
 
     public CodeBuffer() {
@@ -23,21 +23,25 @@ public class CodeBuffer {
     }
 
     public boolean isAtLastLine() {
-        return currentLineIndex >= lines.size();
+        return currentLineIndex >= lines.size() - 1;
     }
 
     public boolean isAtFirstLine() {
         return currentLineIndex <= 0;
     }
 
-    public void nextLine() {
+    public CodeBufferLine goToNextLine() {
         if (currentLineIndex + 1 < lines.size())
             currentLineIndex++;
+
+        return getCurrentLine();
     }
 
-    public void previousLine() {
+    public CodeBufferLine goToPreviousLine() {
         if (currentLineIndex - 1 >= 0)
             currentLineIndex--;
+
+        return getCurrentLine();
     }
 
     public void insertNewLineAfterCurrent(boolean goToNext) {
@@ -45,14 +49,14 @@ public class CodeBuffer {
         if (goToNext) currentLineIndex++;
     }
 
-    public void insertNewLineBeforeCurent(boolean goToNext) {
+    public void insertNewLineBeforeCurrent(boolean goToNext) {
         lines.add(currentLineIndex, new CodeBufferLine());
         if (goToNext) currentLineIndex++;
     }
 
     public void removeLine() {
         lines.remove(currentLineIndex);
-        previousLine();
+        goToPreviousLine();
     }
 
     public CodeBufferLine getCurrentLine() {
@@ -61,5 +65,9 @@ public class CodeBuffer {
 
     public int getCurrentLineIndex() {
         return currentLineIndex;
+    }
+
+    public String getText() {
+        return lines.stream().map(CodeBufferLine::getText).collect(Collectors.joining("\n"));
     }
 }
