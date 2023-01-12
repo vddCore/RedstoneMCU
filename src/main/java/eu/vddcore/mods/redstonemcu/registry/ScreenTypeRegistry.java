@@ -11,9 +11,9 @@ public class ScreenTypeRegistry {
     public static ScreenHandlerType<McuIdeController> IDE_SCREEN_HANDLER_TYPE;
 
     public static void registerAll() {
-        IDE_SCREEN_HANDLER_TYPE = ScreenHandlerRegistry.registerSimple(
+        IDE_SCREEN_HANDLER_TYPE = ScreenHandlerRegistry.registerExtended(
             Identifiers.MCU_STANDARD_BLOCK_ID,
-            (syncId, inv) -> new McuIdeController(syncId, inv, new BlockPos(0, 0, 0), ScreenHandlerContext.EMPTY)
+            (syncId, inv, buf) -> new McuIdeController(syncId, inv, ScreenHandlerContext.EMPTY, buf)
         );
     }
 }

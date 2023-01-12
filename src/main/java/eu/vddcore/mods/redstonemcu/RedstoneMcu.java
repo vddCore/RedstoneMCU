@@ -13,7 +13,6 @@ public class RedstoneMcu implements ModInitializer {
         EntityRegistry.registerAll();
         ScreenTypeRegistry.registerAll();
 
-        PacketRegistry.registerServerToClient();
         PacketRegistry.registerClientToServer();
     }
 }

@@ -2,6 +2,7 @@ package eu.vddcore.mods.redstonemcu.client;
 
 import eu.vddcore.mods.redstonemcu.gui.McuIdeController;
 import eu.vddcore.mods.redstonemcu.gui.McuIdeScreen;
+import eu.vddcore.mods.redstonemcu.registry.PacketRegistry;
 import eu.vddcore.mods.redstonemcu.registry.ScreenTypeRegistry;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.api.EnvType;
@@ -16,5 +17,7 @@ public class RedstoneMcuClient implements ClientModInitializer {
             ScreenTypeRegistry.IDE_SCREEN_HANDLER_TYPE,
             (gui, inventory, title) -> new McuIdeScreen(gui, inventory.player, title)
         );
+
+        PacketRegistry.registerServerToClient();
     }
 }

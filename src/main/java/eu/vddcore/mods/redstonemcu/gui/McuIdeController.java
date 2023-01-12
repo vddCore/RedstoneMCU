@@ -1,10 +1,10 @@
 package eu.vddcore.mods.redstonemcu.gui;
 
 import eu.vddcore.mods.redstonemcu.Identifiers;
+import eu.vddcore.mods.redstonemcu.gui.widget.WCodeEditor;
 import eu.vddcore.mods.redstonemcu.registry.ScreenTypeRegistry;
 import io.github.cottonmc.cotton.gui.SyncedGuiDescription;
-import io.github.cottonmc.cotton.gui.widget.WGridPanel;
-import io.github.cottonmc.cotton.gui.widget.WLabel;
+import io.github.cottonmc.cotton.gui.widget.*;
 import io.netty.buffer.Unpooled;
 import net.fabricmc.fabric.api.network.ClientSidePacketRegistry;
 import net.minecraft.entity.player.PlayerEntity;
@@ -15,24 +15,67 @@ import net.minecraft.text.LiteralText;
 import net.minecraft.util.math.BlockPos;
 
 public class McuIdeController extends SyncedGuiDescription {
+    private WLabel northPortStatusLabel;
+    private WLabel eastPortStatusLabel;
+    private WLabel southPortStatusLabel;
+    private WLabel westPortStatusLabel;
+
     private final BlockPos blockPos;
 
-    private final WLabel northPortStatusLabel;
-    private final WLabel eastPortStatusLabel;
-    private final WLabel southPortStatusLabel;
-    private final WLabel westPortStatusLabel;
-
-    public McuIdeController(int syncId, PlayerInventory playerInventory, BlockPos blockPos, ScreenHandlerContext context) {
+    public McuIdeController(int syncId, PlayerInventory inv, ScreenHandlerContext context) {
         super(
             ScreenTypeRegistry.IDE_SCREEN_HANDLER_TYPE,
             syncId,
-            playerInventory,
+            inv,
             getBlockInventory(context, 1),
             getBlockPropertyDelegate(context)
         );
 
-        this.blockPos = blockPos;
+        this.blockPos = BlockPos.ORIGIN;
+        createVisualTree();
+    }
 
+    public McuIdeController(int syncId, PlayerInventory inv, ScreenHandlerContext context, PacketByteBuf buf) {
+        super(
+            ScreenTypeRegistry.IDE_SCREEN_HANDLER_TYPE,
+            syncId,
+            inv,
+            getBlockInventory(context, 1),
+            getBlockPropertyDelegate(context)
+        );
+
+        this.blockPos = buf.readBlockPos();
+        createVisualTree();
+
+        if (inv.player.getEntityWorld().isClient()) {
+            PacketByteBuf buf2 = new PacketByteBuf(Unpooled.buffer());
+            buf2.writeBlockPos(blockPos);
+
+            ClientSidePacketRegistry.INSTANCE.sendToServer(Identifiers.CSP_MCU_IDE_OPENED, buf2);
+        }
+    }
+
+    public void updateMcuStatusText(String text) {
+        String[] segments = text.split("\n");
+
+        northPortStatusLabel.setText(new LiteralText(segments[0]));
+        westPortStatusLabel.setText(new LiteralText(segments[1]));
+        southPortStatusLabel.setText(new LiteralText(segments[2]));
+        eastPortStatusLabel.setText(new LiteralText(segments[3]));
+    }
+
+    @Override
+    public void close(PlayerEntity player) {
+        if (player.getEntityWorld().isClient()) {
+            PacketByteBuf buf = new PacketByteBuf(Unpooled.buffer());
+            buf.writeBlockPos(blockPos);
+            ClientSidePacketRegistry.INSTANCE.sendToServer(Identifiers.CSP_MCU_IDE_CLOSED, buf);
+        }
+
+        super.close(player);
+    }
+
+    private void createVisualTree() {
         WGridPanel root = new WGridPanel();
         setRootPanel(root);
         root.setSize(172, 96);
@@ -47,24 +90,10 @@ public class McuIdeController extends SyncedGuiDescription {
         root.add(southPortStatusLabel, 0, 3);
         root.add(eastPortStatusLabel, 0, 4);
 
+        WCodeEditor codeEditor = new WCodeEditor();
+        codeEditor.setSize(240, 320);
+
+        root.add(codeEditor, 5, 1, 16, 16);
         root.validate(this);
-    }
-
-    public void updateMcuStatusText(String text) {
-        String[] segments = text.split("\n");
-
-        northPortStatusLabel.setText(new LiteralText(segments[0]));
-        westPortStatusLabel.setText(new LiteralText(segments[1]));
-        southPortStatusLabel.setText(new LiteralText(segments[2]));
-        eastPortStatusLabel.setText(new LiteralText(segments[3]));
-    }
-
-    @Override
-    public void close(PlayerEntity player) {
-        PacketByteBuf buf = new PacketByteBuf(Unpooled.buffer());
-        buf.writeBlockPos(blockPos);
-        ClientSidePacketRegistry.INSTANCE.sendToServer(Identifiers.CSP_MCU_IDE_CLOSED, buf);
-
-        super.close(player);
     }
 }
