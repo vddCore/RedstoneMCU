@@ -1,0 +1,33 @@
+{
+  "schemaVersion": 1,
+  "id": "redstone-mcu",
+  "version": "${version}",
+  "name": "Redstone MCU",
+  "description": "8-bit redstone MCUs programmed using a simple assembly language.",
+  "authors": [
+    "Ciastex"
+  ],
+  "contact": {
+    "website": "https://vddcore.eu",
+    "repo": "https://github.com/Ciastex/RedstoneMCU"
+  },
+  "license": "MIT",
+  "icon": "assets/redstonemcu/textures/mcu_standard.png",
+  "environment": "*",
+  "entrypoints": {
+    "client": [
+      "eu.vddcore.mods.redstonemcu.client.RedstoneMcuClient"
+    ],
+    "main": [
+      "eu.vddcore.mods.redstonemcu.RedstoneMcu"
+    ]
+  },
+  "mixins": [
+    "redstone-mcu.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=0.9.0+build.204",
+    "fabric": "*",
+    "minecraft": "1.16.1"
+  }
+}

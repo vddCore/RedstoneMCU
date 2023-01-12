@@ -1,0 +1,23 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "RGR",
+    "GBG",
+    "RGR"
+  ],
+  "key": {
+    "R": {
+      "item": "minecraft:redstone"
+    },
+    "G": {
+      "item": "minecraft:gold_ingot"
+    },
+    "B": {
+      "item": "minecraft:blackstone"
+    }
+  },
+  "result": {
+    "item": "redstonemcu:mcu_overclocked",
+    "count": 1
+  }
+}
