@@ -13,7 +13,7 @@ public class KeyCommand {
     private boolean shift;
     private int key;
 
-    public final Handler handler;
+    private final Handler handler;
 
     public KeyCommand(Handler handler) {
         this.handler = handler;
@@ -23,6 +23,11 @@ public class KeyCommand {
         this.ctrl = ctrl;
         this.alt = alt;
         this.shift = shift;
+    }
+
+    public void execute(WCodeEditor editor, CodeBuffer buffer) {
+        if (handler != null)
+            handler.handle(editor, buffer);
     }
 
     public void setKey(int key) {

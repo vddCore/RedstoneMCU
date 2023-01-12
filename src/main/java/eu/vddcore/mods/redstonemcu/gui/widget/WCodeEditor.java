@@ -198,7 +198,7 @@ public class WCodeEditor extends WPanel {
         KeyCommand cmd = KeyCommandRegistry.get(modifiers, ch);
 
         if (cmd != null)
-            cmd.handler.handle(this, buffer);
+            cmd.execute(this, buffer);
 
         verticalScrollBar.setMaxValue(buffer.getLineCount());
         buffer.updateViewport();
@@ -208,6 +208,16 @@ public class WCodeEditor extends WPanel {
     public WWidget cycleFocus(boolean lookForwards) {
         handleTab(!lookForwards);
         return this;
+    }
+
+    private void handleTab(boolean shiftPressed) {
+        int modifier = 0;
+
+        if (shiftPressed)
+            modifier = GLFW.GLFW_MOD_SHIFT;
+
+        KeyCommand cmd = KeyCommandRegistry.get(modifier, GLFW.GLFW_KEY_TAB);
+        if (cmd != null) cmd.execute(this, buffer);
     }
 
     @Override
@@ -236,18 +246,6 @@ public class WCodeEditor extends WPanel {
         } else if (amount < 0) {
             scrollTo(verticalScrollBar.getValue() + 1);
         }
-    }
-
-    private void handleTab(boolean shiftPressed) {
-        int modifier = 0;
-
-        if (shiftPressed)
-            modifier = GLFW.GLFW_MOD_SHIFT;
-
-        KeyCommand cmd = KeyCommandRegistry.get(modifier, GLFW.GLFW_KEY_TAB);
-
-        if (cmd != null)
-            cmd.handler.handle(this, buffer);
     }
 
     private void handlePrintable(char c) {
