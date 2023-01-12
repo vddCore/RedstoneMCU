@@ -1,6 +1,6 @@
 ## Redstone MCU design document
 
-Redstone MCU is an 8-bit microcontroller unit with 256 bytes of built-in memory and 64-byte internal stack. The MCU is capable of receiving and outputting redstone signals from its 4 peripheral ports depending on user-defined configuration.
+Redstone MCU is a user-programmable 8-bit microcontroller unit with 128 bytes of built-in memory and 32-byte internal stack. The MCU is capable of receiving and outputting redstone signals from its 4 peripheral ports depending on user-defined configuration.
 
 ### Physical Design
 - 4 redstone signal ports (North, East, South, West).

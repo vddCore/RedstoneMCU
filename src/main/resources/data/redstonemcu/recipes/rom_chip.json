@@ -1,0 +1,23 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "QBQ",
+    "BRB",
+    "QBQ"
+  ],
+  "key": {
+    "R": {
+      "item": "minecraft:redstone"
+    },
+    "Q": {
+      "item": "minecraft:quartz"
+    },
+    "B": {
+      "item": "minecraft:blackstone"
+    }
+  },
+  "result": {
+    "item": "redstonemcu:rom_chip",
+    "count": 1
+  }
+}

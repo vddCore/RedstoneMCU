@@ -5,8 +5,9 @@ import eu.vddcore.mods.redstonemcu.debug.DebuggerOperationMode;
 import eu.vddcore.mods.redstonemcu.hardware.PortMode;
 import eu.vddcore.mods.redstonemcu.hardware.RedstonePort;
 import net.minecraft.block.entity.BlockEntity;
+import net.minecraft.client.gui.screen.ingame.BookEditScreen;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
+import net.minecraft.item.BookItem;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.ItemUsageContext;
 import net.minecraft.text.LiteralText;
@@ -16,20 +17,16 @@ import net.minecraft.util.TypedActionResult;
 import net.minecraft.util.math.Direction;
 import net.minecraft.world.World;
 
-public class ItemMcuDebugger extends Item {
+public class ItemDebugger extends ItemBase {
 
     private DebuggerOperationMode operationMode = DebuggerOperationMode.DISPLAY_INTERNAL_STATE;
 
-    public ItemMcuDebugger(Settings settings) {
+    public ItemDebugger(Settings settings) {
         super(settings);
     }
 
     @Override
-    public ActionResult useOnBlock(ItemUsageContext context) {
-        if (context.getWorld().isClient()) {
-            return ActionResult.PASS;
-        }
-
+    public ActionResult useOnBlockServerOnly(ItemUsageContext context) {
         if (context.getPlayer().isSneaking()) {
             return ActionResult.PASS;
         } else {
@@ -74,14 +71,14 @@ public class ItemMcuDebugger extends Item {
                     return ActionResult.SUCCESS;
                 }
             }
-        }
 
-        return ActionResult.CONSUME;
+            return ActionResult.CONSUME;
+        }
     }
 
     @Override
-    public TypedActionResult<ItemStack> use(World world, PlayerEntity user, Hand hand) {
-        if (world.isClient() || !user.isSneaking())
+    public TypedActionResult<ItemStack> useServerOnly(World world, PlayerEntity user, Hand hand) {
+        if (!user.isSneaking())
             return new TypedActionResult<>(ActionResult.PASS, user.getStackInHand(hand));
 
         operationMode = DebuggerOperationMode.values()[(operationMode.ordinal() + 1) % DebuggerOperationMode.values().length];

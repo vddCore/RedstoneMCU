@@ -2,8 +2,9 @@ package eu.vddcore.mods.redstonemcu;
 
 import eu.vddcore.mods.redstonemcu.blockentity.BlockEntityMcu;
 import eu.vddcore.mods.redstonemcu.block.BlockMcu;
-import eu.vddcore.mods.redstonemcu.items.ItemMcuDebugger;
+import eu.vddcore.mods.redstonemcu.items.ItemDebugger;
 import eu.vddcore.mods.redstonemcu.items.ItemMcuStandard;
+import eu.vddcore.mods.redstonemcu.items.ItemRomChip;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.object.builder.v1.block.FabricBlockSettings;
 import net.minecraft.block.Material;
@@ -20,11 +21,15 @@ public class RedstoneMcu implements ModInitializer {
     public static BlockEntityType<BlockEntityMcu> BLOCK_MCU_ENTITY;
 
     public static ItemMcuStandard ITEM_MCU_STANDARD = new ItemMcuStandard(BLOCK_MCU, new Item.Settings().group(ItemGroup.REDSTONE));
-    public static ItemMcuDebugger ITEM_MCU_DEBUGGER = new ItemMcuDebugger(new Item.Settings().group(ItemGroup.MISC));
+    public static ItemRomChip ITEM_ROM_CHIP = new ItemRomChip(new Item.Settings().group(ItemGroup.REDSTONE));
+
+    public static ItemDebugger ITEM_MCU_DEBUGGER = new ItemDebugger(new Item.Settings().group(ItemGroup.MISC));
 
     @Override
     public void onInitialize() {
         Registry.register(Registry.ITEM, new Identifier(MOD_ID, "mcu_standard"), ITEM_MCU_STANDARD);
+        Registry.register(Registry.ITEM, new Identifier(MOD_ID, "rom_chip"), ITEM_ROM_CHIP);
+
         Registry.register(Registry.ITEM, new Identifier(MOD_ID, "mcu_debugger"), ITEM_MCU_DEBUGGER);
 
         Registry.register(Registry.BLOCK, new Identifier(MOD_ID, "mcu_block_standard"), BLOCK_MCU);
