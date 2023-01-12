@@ -1,7 +1,7 @@
 package eu.vddcore.mods.redstonemcu;
 
-import eu.vddcore.mods.redstonemcu.blocks.BlockEntityMcu;
-import eu.vddcore.mods.redstonemcu.blocks.BlockMcu;
+import eu.vddcore.mods.redstonemcu.blockentity.BlockEntityMcu;
+import eu.vddcore.mods.redstonemcu.block.BlockMcu;
 import eu.vddcore.mods.redstonemcu.items.ItemMcuDebugger;
 import eu.vddcore.mods.redstonemcu.items.ItemMcuOverclocked;
 import eu.vddcore.mods.redstonemcu.items.ItemMcuStandard;

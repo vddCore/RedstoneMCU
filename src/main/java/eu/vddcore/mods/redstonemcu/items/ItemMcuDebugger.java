@@ -1,6 +1,6 @@
 package eu.vddcore.mods.redstonemcu.items;
 
-import eu.vddcore.mods.redstonemcu.blocks.BlockEntityMcu;
+import eu.vddcore.mods.redstonemcu.blockentity.BlockEntityMcu;
 import eu.vddcore.mods.redstonemcu.debug.DebuggerOperationMode;
 import eu.vddcore.mods.redstonemcu.hardware.PortMode;
 import eu.vddcore.mods.redstonemcu.hardware.RedstonePort;

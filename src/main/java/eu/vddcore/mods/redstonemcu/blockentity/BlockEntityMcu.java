@@ -1,4 +1,4 @@
-package eu.vddcore.mods.redstonemcu.blocks;
+package eu.vddcore.mods.redstonemcu.blockentity;
 
 import eu.vddcore.mods.redstonemcu.RedstoneMcu;
 import eu.vddcore.mods.redstonemcu.hardware.PortMode;
@@ -38,7 +38,6 @@ public class BlockEntityMcu extends BlockEntity implements Tickable {
             return;
 
         BlockPos pos = getPos();
-        boolean isAnyPortOutput = false;
 
         for (RedstonePort p : ports) {
             if (p != null) {
@@ -62,8 +61,7 @@ public class BlockEntityMcu extends BlockEntity implements Tickable {
                     } else {
                         p.setRedstonePowerLevel(0);
                     }
-                } else if (mode.equals(PortMode.OUTPUT)) {
-                }
+                } 
             }
         }
     }
