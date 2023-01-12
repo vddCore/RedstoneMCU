@@ -1,9 +1,6 @@
 package eu.vddcore.mods.redstonemcu;
 
-import eu.vddcore.mods.redstonemcu.registry.BlockRegistry;
-import eu.vddcore.mods.redstonemcu.registry.EntityRegistry;
-import eu.vddcore.mods.redstonemcu.registry.ItemRegistry;
-import eu.vddcore.mods.redstonemcu.registry.ScreenTypeRegistry;
+import eu.vddcore.mods.redstonemcu.registry.*;
 import net.fabricmc.api.ModInitializer;
 
 public class RedstoneMcu implements ModInitializer {
@@ -15,5 +12,8 @@ public class RedstoneMcu implements ModInitializer {
         ItemRegistry.registerAll();
         EntityRegistry.registerAll();
         ScreenTypeRegistry.registerAll();
+
+        PacketRegistry.registerServerToClient();
+        PacketRegistry.registerClientToServer();
     }
 }

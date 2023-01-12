@@ -5,6 +5,7 @@ import eu.vddcore.mods.redstonemcu.gui.McuIdeController;
 import net.fabricmc.fabric.api.screenhandler.v1.ScreenHandlerRegistry;
 import net.minecraft.screen.ScreenHandlerContext;
 import net.minecraft.screen.ScreenHandlerType;
+import net.minecraft.util.math.BlockPos;
 
 public class ScreenTypeRegistry {
     public static ScreenHandlerType<McuIdeController> IDE_SCREEN_HANDLER_TYPE;
@@ -12,7 +13,7 @@ public class ScreenTypeRegistry {
     public static void registerAll() {
         IDE_SCREEN_HANDLER_TYPE = ScreenHandlerRegistry.registerSimple(
             Identifiers.MCU_STANDARD_BLOCK_ID,
-            (syncId, inv) -> new McuIdeController(syncId, inv, ScreenHandlerContext.EMPTY)
+            (syncId, inv) -> new McuIdeController(syncId, inv, new BlockPos(0, 0, 0), ScreenHandlerContext.EMPTY)
         );
     }
 }

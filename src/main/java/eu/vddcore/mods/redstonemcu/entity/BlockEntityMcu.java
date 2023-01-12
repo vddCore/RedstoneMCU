@@ -1,18 +1,22 @@
 package eu.vddcore.mods.redstonemcu.entity;
 
+import eu.vddcore.mods.redstonemcu.Identifiers;
 import eu.vddcore.mods.redstonemcu.gui.McuIdeController;
 import eu.vddcore.mods.redstonemcu.hardware.PortMode;
 import eu.vddcore.mods.redstonemcu.hardware.RedstonePort;
 import eu.vddcore.mods.redstonemcu.registry.EntityRegistry;
+import io.netty.buffer.Unpooled;
+import net.fabricmc.fabric.api.network.ClientSidePacketRegistry;
+import net.fabricmc.fabric.api.network.ServerSidePacketRegistry;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.PacketByteBuf;
 import net.minecraft.screen.NamedScreenHandlerFactory;
 import net.minecraft.screen.ScreenHandler;
 import net.minecraft.screen.ScreenHandlerContext;
-import net.minecraft.text.LiteralText;
 import net.minecraft.text.Text;
 import net.minecraft.text.TranslatableText;
 import net.minecraft.util.Tickable;
@@ -27,7 +31,7 @@ import java.util.stream.Stream;
 public class BlockEntityMcu extends BlockEntity implements Tickable, NamedScreenHandlerFactory {
 
     private final List<RedstonePort> ports;
-    public LiteralText statusText;
+    private PlayerEntity interactingPlayer;
 
     public BlockEntityMcu() {
         super(EntityRegistry.BLOCK_MCU_ENTITY);
@@ -38,8 +42,6 @@ public class BlockEntityMcu extends BlockEntity implements Tickable, NamedScreen
             new RedstonePort(this, Direction.SOUTH),
             new RedstonePort(this, Direction.EAST)
         ).collect(Collectors.toList());
-
-        statusText = new LiteralText("status unavailable");
     }
 
     @Override
@@ -51,7 +53,7 @@ public class BlockEntityMcu extends BlockEntity implements Tickable, NamedScreen
 
         BlockPos pos = getPos();
 
-        StringBuilder text = new StringBuilder();
+        StringBuilder statusStringBuilder = new StringBuilder();
         for (RedstonePort p : ports) {
             if (p != null) {
                 PortMode mode = p.getMode();
@@ -76,7 +78,7 @@ public class BlockEntityMcu extends BlockEntity implements Tickable, NamedScreen
                     }
                 }
 
-                text.append(portDirection.toString())
+                statusStringBuilder.append(portDirection.toString())
                     .append(" [")
                     .append(mode.toString())
                     .append("]: ")
@@ -85,7 +87,16 @@ public class BlockEntityMcu extends BlockEntity implements Tickable, NamedScreen
             }
         }
 
-        statusText = new LiteralText(text.toString());
+        if (interactingPlayer != null)
+        {
+            String mcuStatusText = statusStringBuilder.toString();
+
+            PacketByteBuf buf = new PacketByteBuf(Unpooled.buffer());
+            buf.writeInt(mcuStatusText.length());
+            buf.writeString(mcuStatusText);
+
+            ServerSidePacketRegistry.INSTANCE.sendToPlayer(interactingPlayer, Identifiers.SCP_MCU_STATUS_DATA, buf);
+        }
     }
 
     @Override
@@ -130,6 +141,22 @@ public class BlockEntityMcu extends BlockEntity implements Tickable, NamedScreen
 
     @Override
     public ScreenHandler createMenu(int syncId, PlayerInventory inv, PlayerEntity player) {
-        return new McuIdeController(syncId, inv, ScreenHandlerContext.create(world, pos));
+        handleGuiOpen();
+        return new McuIdeController(syncId, inv, pos, ScreenHandlerContext.create(world, pos));
+    }
+
+    public PlayerEntity getCurrentlyInteractingPlayer() {
+        return interactingPlayer;
+    }
+
+    public void setCurrentlyInteractingPlayer(PlayerEntity player) {
+        interactingPlayer = player;
+    }
+
+    private void handleGuiOpen() {
+        PacketByteBuf buf = new PacketByteBuf(Unpooled.buffer());
+        buf.writeBlockPos(pos);
+
+        ClientSidePacketRegistry.INSTANCE.sendToServer(Identifiers.CSP_MCU_IDE_OPENED, buf);
     }
 }

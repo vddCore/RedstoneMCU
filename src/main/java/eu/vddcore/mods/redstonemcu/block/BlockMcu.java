@@ -11,8 +11,7 @@ import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.screen.NamedScreenHandlerFactory;
 import net.minecraft.sound.BlockSoundGroup;
-import net.minecraft.state.StateManager;
-import net.minecraft.state.property.BooleanProperty;
+import net.minecraft.text.LiteralText;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
 import net.minecraft.util.hit.BlockHitResult;
@@ -27,28 +26,24 @@ import org.jetbrains.annotations.Nullable;
 @SuppressWarnings("deprecation")
 public class BlockMcu extends Block implements BlockEntityProvider {
 
-    public static final BooleanProperty EMITTING_NORTH = BooleanProperty.of("emitting_north");
-    public static final BooleanProperty EMITTING_EAST = BooleanProperty.of("emitting_east");
-    public static final BooleanProperty EMITTING_SOUTH = BooleanProperty.of("emitting_south");
-    public static final BooleanProperty EMITTING_WEST = BooleanProperty.of("emitting_west");
-
     public BlockMcu(Settings settings) {
         super(settings);
     }
 
     @Override
-    protected void appendProperties(StateManager.Builder<Block, BlockState> builder) {
-        builder.add(EMITTING_NORTH)
-            .add(EMITTING_EAST)
-            .add(EMITTING_SOUTH)
-            .add(EMITTING_WEST);
-    }
-
-    @Override
     public ActionResult onUse(BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand, BlockHitResult hit) {
-        if (!world.isClient() && player.getStackInHand(hand).getCount() == 0) {
-            player.openHandledScreen(state.createScreenHandlerFactory(world, pos));
-            return ActionResult.SUCCESS;
+        BlockEntityMcu mcuEntity = (BlockEntityMcu) world.getBlockEntity(pos);
+
+        if (mcuEntity == null)
+            return ActionResult.FAIL;
+
+        if (!world.isClient() && player.getStackInHand(Hand.MAIN_HAND).isEmpty()) {
+            if (mcuEntity.getCurrentlyInteractingPlayer() == null) {
+                player.openHandledScreen(state.createScreenHandlerFactory(world, pos));
+                return ActionResult.SUCCESS;
+            } else {
+                player.sendMessage(new LiteralText("This MCU is currently being used by someone else."), true);
+            }
         }
 
         return ActionResult.PASS;
@@ -63,14 +58,6 @@ public class BlockMcu extends Block implements BlockEntityProvider {
     public @Nullable NamedScreenHandlerFactory createScreenHandlerFactory(BlockState state, World world, BlockPos pos) {
         BlockEntity blockEntity = world.getBlockEntity(pos);
         return blockEntity instanceof NamedScreenHandlerFactory ? (NamedScreenHandlerFactory) blockEntity : null;
-    }
-
-    @Override
-    public boolean emitsRedstonePower(BlockState state) {
-        return state.get(EMITTING_NORTH)
-            || state.get(EMITTING_EAST)
-            || state.get(EMITTING_SOUTH)
-            || state.get(EMITTING_WEST);
     }
 
     @Override

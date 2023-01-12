@@ -12,10 +12,4 @@ public class McuIdeScreen extends CottonInventoryScreen<McuIdeController> {
         super(controller, player, title);
         this.controller = controller;
     }
-
-    @Override
-    public void tick() {
-        super.tick();
-        controller.tick();
-    }
 }
