@@ -10,6 +10,8 @@ public class NavigationCommands {
     public static void registerAll() {
         KeyCommandRegistry.bind(false, false, false, GLFW.GLFW_KEY_LEFT, moveCursorLeft);
         KeyCommandRegistry.bind(false, false, false, GLFW.GLFW_KEY_RIGHT, moveCursorRight);
+        KeyCommandRegistry.bind(true, false, false, GLFW.GLFW_KEY_LEFT, jumpLeft);
+        KeyCommandRegistry.bind(true, false, false, GLFW.GLFW_KEY_RIGHT, jumpRight);
         KeyCommandRegistry.bind(false, false, false, GLFW.GLFW_KEY_UP, moveCursorUp);
         KeyCommandRegistry.bind(false, false, false, GLFW.GLFW_KEY_DOWN, moveCursorDown);
         KeyCommandRegistry.bind(false, false, false, GLFW.GLFW_KEY_HOME, goToLineStart);
@@ -20,6 +22,7 @@ public class NavigationCommands {
 
     private static final KeyCommand moveCursorLeft = new KeyCommand((editor, buffer) -> {
         CodeBufferLine currentLine = buffer.getCurrentLine();
+
         if (currentLine.isCaretAtStart()) {
             if (buffer.isAtFirstLine()) return;
             currentLine = buffer.goToPreviousLine();
@@ -29,7 +32,67 @@ public class NavigationCommands {
         }
     });
 
-    public static final KeyCommand moveCursorRight = new KeyCommand((editor, buffer) -> {
+    private static final KeyCommand jumpLeft = new KeyCommand((editor, buffer) -> {
+        CodeBufferLine currentLine = buffer.getCurrentLine();
+
+        if (currentLine.isCaretAtStart()) {
+            if (buffer.isAtFirstLine())
+                return;
+
+            buffer.goToPreviousLine().goToEnd();
+            return;
+        }
+
+        char ch = currentLine.getCharBehindCaret();
+        if (Character.isLetter(ch) || Character.isDigit(ch)) {
+            while ((Character.isLetter(ch) || Character.isDigit(ch)) && !currentLine.isCaretAtStart()) {
+                ch = currentLine.getCharBehindCaret();
+                currentLine.moveCaretLeft();
+            }
+        } else if(Character.isWhitespace(ch)) {
+            while (Character.isWhitespace(ch) && !currentLine.isCaretAtStart()) {
+                ch = currentLine.getCharBehindCaret();
+                currentLine.moveCaretLeft();
+            }
+        } else {
+            while (!Character.isWhitespace(ch) && !(Character.isLetter(ch) || Character.isDigit(ch)) && !currentLine.isCaretAtStart()) {
+                ch = currentLine.getCharBehindCaret();
+                currentLine.moveCaretLeft();
+            }
+        }
+    });
+
+    private static final KeyCommand jumpRight = new KeyCommand((editor, buffer) -> {
+        CodeBufferLine currentLine = buffer.getCurrentLine();
+
+        if (currentLine.isCaretAtEnd()) {
+            if (buffer.isAtLastLine())
+                return;
+
+            buffer.goToNextLine().goToStart();
+            return;
+        }
+
+        char ch = currentLine.getCharBeforeCaret();
+        if (Character.isLetter(ch) || Character.isDigit(ch)) {
+            while ((Character.isLetter(ch) || Character.isDigit(ch)) && !currentLine.isCaretAtEnd()) {
+                ch = currentLine.getCharBeforeCaret();
+                currentLine.moveCaretRight();
+            }
+        } else if (Character.isWhitespace(ch)) {
+            while (Character.isWhitespace(ch) && !currentLine.isCaretAtEnd()) {
+                ch = currentLine.getCharBeforeCaret();
+                currentLine.moveCaretRight();
+            }
+        } else {
+            while (!Character.isWhitespace(ch) && !(Character.isLetter(ch) || Character.isDigit(ch)) && !currentLine.isCaretAtEnd()) {
+                ch = currentLine.getCharBeforeCaret();
+                currentLine.moveCaretRight();
+            }
+        }
+    });
+
+    private static final KeyCommand moveCursorRight = new KeyCommand((editor, buffer) -> {
         CodeBufferLine currentLine = buffer.getCurrentLine();
 
         if (currentLine.isCaretAtEnd()) {
@@ -41,7 +104,7 @@ public class NavigationCommands {
         }
     });
 
-    public static KeyCommand moveCursorUp = new KeyCommand((editor, buffer) -> {
+    private static final KeyCommand moveCursorUp = new KeyCommand((editor, buffer) -> {
         CodeBufferLine currentLine = buffer.getCurrentLine();
 
         if (buffer.isAtFirstLine()) {
@@ -64,7 +127,7 @@ public class NavigationCommands {
         }
     });
 
-    public static KeyCommand moveCursorDown = new KeyCommand((editor, buffer) -> {
+    private static final KeyCommand moveCursorDown = new KeyCommand((editor, buffer) -> {
         CodeBufferLine currentLine = buffer.getCurrentLine();
 
         if (buffer.isAtLastLine()) {
@@ -89,19 +152,21 @@ public class NavigationCommands {
         }
     });
 
-    public static KeyCommand goToLineStart = new KeyCommand((editor, buffer) -> {
+    private static final KeyCommand goToLineStart = new KeyCommand((editor, buffer) -> {
         buffer.getCurrentLine().goToStart();
     });
 
-    public static KeyCommand goToLineEnd = new KeyCommand((editor, buffer) -> {
-       buffer.getCurrentLine().goToEnd();
+    private static final KeyCommand goToLineEnd = new KeyCommand((editor, buffer) -> {
+        buffer.getCurrentLine().goToEnd();
     });
 
-    public static KeyCommand goToDocumentStart = new KeyCommand((editor, buffer) -> {
+    private static final KeyCommand goToDocumentStart = new KeyCommand((editor, buffer) -> {
         buffer.setCurrentLineIndex(0);
+        buffer.getCurrentLine().goToStart();
     });
 
-    public static KeyCommand goToDocumentEnd = new KeyCommand((editor, buffer) -> {
+    private static final KeyCommand goToDocumentEnd = new KeyCommand((editor, buffer) -> {
         buffer.setCurrentLineIndex(buffer.getLineCount() - 1);
+        buffer.getCurrentLine().goToEnd();
     });
 }

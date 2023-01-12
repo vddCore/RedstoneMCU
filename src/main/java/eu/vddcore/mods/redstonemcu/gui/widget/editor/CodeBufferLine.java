@@ -49,6 +49,33 @@ public class CodeBufferLine {
         this.caretPosition = caretPosition;
     }
 
+    public char getCharAtCaret() {
+        int position = caretPosition - 1;
+
+        if (position < 0)
+            position = 0;
+
+        return text.charAt(position);
+    }
+
+    public char getCharBehindCaret() {
+        int position = caretPosition - 2;
+
+        if (position < 0)
+            position = 0;
+
+        return text.charAt(position);
+    }
+
+    public char getCharBeforeCaret() {
+        int position = caretPosition + 1;
+
+        if (position >= text.length())
+            position = text.length() - 1;
+
+        return text.charAt(position);
+    }
+
     public String textFromCaretOnwards() {
         return text.substring(caretPosition);
     }

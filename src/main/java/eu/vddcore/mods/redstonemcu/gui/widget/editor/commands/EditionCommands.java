@@ -12,6 +12,8 @@ public class EditionCommands {
         KeyCommandRegistry.bind(false, false, false, GLFW.GLFW_KEY_ENTER, enter);
         KeyCommandRegistry.bind(false, false, false, GLFW.GLFW_KEY_TAB, indent);
         KeyCommandRegistry.bind(false, false, true, GLFW.GLFW_KEY_TAB, unindent);
+        KeyCommandRegistry.bind(false, true, false, GLFW.GLFW_KEY_UP, moveLineUp);
+        KeyCommandRegistry.bind(false, true, false, GLFW.GLFW_KEY_DOWN, moveLineDown);
     }
 
     private static final KeyCommand backspace = new KeyCommand((editor, buffer) -> {
@@ -71,4 +73,20 @@ public class EditionCommands {
 
     private static final KeyCommand indent = new KeyCommand((editor, buffer) -> buffer.getCurrentLine().indentAtCaret(editor.options.tabSize));
     private static final KeyCommand unindent = new KeyCommand((editor, buffer) -> buffer.getCurrentLine().unindent(editor.options.tabSize));
+
+    private static final KeyCommand moveLineUp = new KeyCommand((editor, buffer) -> {
+        if (buffer.isAtFirstLine())
+            return;
+
+        buffer.swapLines(buffer.getCurrentLineIndex(), buffer.getCurrentLineIndex() - 1);
+        buffer.goToPreviousLine();
+    });
+
+    private static final KeyCommand moveLineDown = new KeyCommand((editor, buffer) -> {
+       if(buffer.isAtLastLine())
+           return;
+
+       buffer.swapLines(buffer.getCurrentLineIndex(), buffer.getCurrentLineIndex() + 1);
+       buffer.goToNextLine();
+    });
 }

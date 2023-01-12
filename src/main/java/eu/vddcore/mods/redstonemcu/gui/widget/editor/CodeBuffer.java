@@ -45,6 +45,18 @@ public class CodeBuffer {
         this.currentWindowTop = top;
     }
 
+    public void swapLines(int a, int b) {
+        if (a < 0 || a >= lines.size())
+            return;
+
+        if (b < 0 || b >= lines.size())
+            return;
+
+        CodeBufferLine tmp = lines.get(a);
+        lines.set(a, lines.get(b));
+        lines.set(b, tmp);
+    }
+
     public int getWindowTop() {
         return currentWindowTop;
     }
