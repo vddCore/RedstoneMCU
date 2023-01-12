@@ -8,6 +8,7 @@ import net.minecraft.block.BlockEntityProvider;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.ShapeContext;
 import net.minecraft.block.entity.BlockEntity;
+import net.minecraft.sound.BlockSoundGroup;
 import net.minecraft.state.StateManager;
 import net.minecraft.state.property.BooleanProperty;
 import net.minecraft.util.math.BlockPos;
@@ -80,6 +81,11 @@ public class BlockMcu extends Block implements BlockEntityProvider {
     @Override
     @SuppressWarnings("deprecation")
     public VoxelShape getOutlineShape(BlockState state, BlockView world, BlockPos pos, ShapeContext context) {
-        return VoxelShapes.cuboid(0, 0, 0, 1, 0.35, 1);
+        return VoxelShapes.cuboid(0, 0, 0, 1, 0.30, 1);
+    }
+
+    @Override
+    public BlockSoundGroup getSoundGroup(BlockState state) {
+        return BlockSoundGroup.METAL;
     }
 }
