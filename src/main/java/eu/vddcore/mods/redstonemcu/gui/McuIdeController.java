@@ -7,6 +7,7 @@ import io.github.cottonmc.cotton.gui.SyncedGuiDescription;
 import io.github.cottonmc.cotton.gui.widget.*;
 import io.netty.buffer.Unpooled;
 import net.fabricmc.fabric.api.network.ClientSidePacketRegistry;
+import net.fabricmc.fabric.api.util.TriState;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.network.PacketByteBuf;
@@ -94,7 +95,7 @@ public class McuIdeController extends SyncedGuiDescription {
         WLabel codeEditorTitle = new WLabel("ROM Chip Assembly");
 
         root.add(codeEditorTitle, 6, 1);
-        root.add(codeEditor, 6, 2, 12, 8);
+        root.add(codeEditor, 6, 2, 12, 10);
         root.validate(this);
     }
 }

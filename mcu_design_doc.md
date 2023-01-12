@@ -5,6 +5,7 @@ Redstone MCU is a user-programmable 8-bit microcontroller unit with 128 bytes of
 ### Physical Design
 - 4 redstone signal ports (North, East, South, West).
 - Half-slab. Placeable on any solid block.
+- User-removable heat-spreader, allowing for insertion of ROM plates with user-defined code.
 
 ### Registers
 **A register**  
@@ -35,3 +36,5 @@ N |3210|3210| S    E |3210|3210| W
 **P register**  
 Port configuration register. Divided into 4 nibbles, each can be set to one of three different states defining a port's behavior. The details on redstone signal port configuration are documented in the "Redstone Port Configuration" section.
 
+### Instruction encoding
+ 

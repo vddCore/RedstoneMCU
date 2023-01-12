@@ -1,8 +1,12 @@
 package eu.vddcore.mods.redstonemcu.gui.widget;
 
+import io.github.cottonmc.cotton.gui.GuiDescription;
 import io.github.cottonmc.cotton.gui.client.Scissors;
 import io.github.cottonmc.cotton.gui.client.ScreenDrawing;
+import io.github.cottonmc.cotton.gui.widget.WPanel;
+import io.github.cottonmc.cotton.gui.widget.WScrollBar;
 import io.github.cottonmc.cotton.gui.widget.WWidget;
+import io.github.cottonmc.cotton.gui.widget.data.Axis;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.MinecraftClient;
@@ -10,7 +14,7 @@ import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.util.math.MatrixStack;
 import org.lwjgl.glfw.GLFW;
 
-public class WCodeEditor extends WWidget {
+public class WCodeEditor extends WPanel {
     private final int CARET_BLINK_THRESHOLD = 10;
     private final int CARET_THICKNESS = 1;
 
@@ -33,18 +37,20 @@ public class WCodeEditor extends WWidget {
 
     private final CodeBuffer buffer;
 
+    private WNonFocusableScrollBar verticalScrollBar;
+
     private int caretTicker = 0;
     private boolean drawCaret = false;
     private int currentBorderColor = EDITOR_BORDER_NORMAL_COLOR;
 
     public WCodeEditor() {
-        buffer = new CodeBuffer();
-    }
+        super();
 
-    @Override
-    public WWidget cycleFocus(boolean lookForwards) {
-        handleTab(!lookForwards);
-        return this;
+        buffer = new CodeBuffer(this);
+
+        verticalScrollBar = new WNonFocusableScrollBar(Axis.VERTICAL);
+        verticalScrollBar.setValue(0);
+        children.add(verticalScrollBar);
     }
 
     @Override
@@ -61,17 +67,34 @@ public class WCodeEditor extends WWidget {
         return buffer.getText();
     }
 
+    public int getMaxDisplayableLines() {
+        TextRenderer textRenderer = MinecraftClient.getInstance().textRenderer;
+
+        int heightPerLine = textRenderer.fontHeight + LINE_SPACING;
+        int usableHeight = getHeight() - MARGIN_Y * 2 - BORDER_THICKNESS * 2;
+
+        return usableHeight / heightPerLine;
+    }
+
+    public void forceMoveScrollBar(int value) {
+        verticalScrollBar.setValue(value);
+    }
+
     @Override
     @Environment(EnvType.CLIENT)
     public void paint(MatrixStack matrices, int x, int y, int mouseX, int mouseY) {
         TextRenderer textRenderer = MinecraftClient.getInstance().textRenderer;
-        int lineCount = buffer.getLineCount();
+
+        buffer.setWindowTop(verticalScrollBar.getValue());
+
+        int caretX = textRenderer.getWidth(buffer.getCurrentLine().textUntilCaret());
+        int caretY = (buffer.getCurrentLineIndex() - buffer.getWindowTop()) * (textRenderer.fontHeight + LINE_SPACING);
 
         ScreenDrawing.coloredRect(x, y, getWidth(), getHeight(), currentBorderColor);
         ScreenDrawing.coloredRect(
             x + BORDER_THICKNESS,
             y + BORDER_THICKNESS,
-            getWidth() - BORDER_THICKNESS * 2,
+            getWidth() - BORDER_THICKNESS * 2 - verticalScrollBar.getWidth(),
             getHeight() - BORDER_THICKNESS * 2,
             EDITOR_BACKGROUND
         );
@@ -86,15 +109,22 @@ public class WCodeEditor extends WWidget {
         if (HIGHLIGHT_CURRENT_LINE) {
             ScreenDrawing.coloredRect(
                 x + MARGIN_X + BORDER_THICKNESS,
-                (y + MARGIN_Y + BORDER_THICKNESS + LINE_SPACING * buffer.getCurrentLineIndex() + buffer.getCurrentLineIndex() * textRenderer.fontHeight) - 1,
-                getWidth() - (MARGIN_X + BORDER_THICKNESS) * 2,
+                y + caretY + MARGIN_Y + BORDER_THICKNESS - 1,
+                getWidth() - (MARGIN_X + BORDER_THICKNESS) * 2 - verticalScrollBar.getWidth(),
                 textRenderer.fontHeight + 1,
                 EDITOR_LINE_HIGHLIGHT_COLOR
             );
         }
 
-        for (int i = 0; i < lineCount; i++) {
-            CodeBufferLine line = buffer.getLine(i);
+        int maxDisplayable = getMaxDisplayableLines();
+        for (int i = 0; i < maxDisplayable; i++) {
+            CodeBufferLine line;
+            try {
+                line = buffer.getLine(i + buffer.getWindowTop());
+            } catch (Exception e) {
+                break;
+            }
+
             ScreenDrawing.drawString(
                 matrices,
                 line.getText(),
@@ -105,9 +135,6 @@ public class WCodeEditor extends WWidget {
         }
 
         if (drawCaret && isFocused()) {
-            int caretX = textRenderer.getWidth(buffer.getCurrentLine().textUntilCaret());
-            int caretY = buffer.getCurrentLineIndex() * (textRenderer.fontHeight + LINE_SPACING);
-
             ScreenDrawing.coloredRect(
                 x + caretX + MARGIN_X + BORDER_THICKNESS,
                 y + caretY + MARGIN_Y + BORDER_THICKNESS - 1,
@@ -117,6 +144,8 @@ public class WCodeEditor extends WWidget {
             );
         }
         Scissors.pop();
+
+        super.paint(matrices, x, y, mouseX, mouseY);
     }
 
     @Override
@@ -129,6 +158,16 @@ public class WCodeEditor extends WWidget {
         } else {
             caretTicker++;
         }
+
+        verticalScrollBar.setMaxValue(buffer.getLineCount());
+        verticalScrollBar.setWindow(MinecraftClient.getInstance().textRenderer.fontHeight + MARGIN_Y + BORDER_THICKNESS + LINE_SPACING + 2);
+    }
+
+    @Override
+    public void validate(GuiDescription host) {
+        super.validate(host);
+        verticalScrollBar.setSize(18, getHeight());
+        verticalScrollBar.setLocation(getWidth() - verticalScrollBar.getWidth(), 0);
     }
 
     @Override
@@ -177,9 +216,17 @@ public class WCodeEditor extends WWidget {
                 handleEnter();
                 break;
             case GLFW.GLFW_KEY_TAB:
-                // tab doesn't work at all.
+                // tab doesn't work at all in this place, but see below...
                 break;
         }
+
+        buffer.updateViewport();
+    }
+
+    @Override
+    public WWidget cycleFocus(boolean lookForwards) {
+        handleTab(!lookForwards);
+        return this;
     }
 
     @Override
@@ -335,7 +382,6 @@ public class WCodeEditor extends WWidget {
 
     private void handlePrintable(char c) {
         CodeBufferLine currentLine = buffer.getCurrentLine();
-
         currentLine.insertAtCaret(c);
     }
 }
