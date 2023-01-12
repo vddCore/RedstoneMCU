@@ -16,6 +16,8 @@ import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.util.math.MatrixStack;
 import org.lwjgl.glfw.GLFW;
 
+import java.util.ArrayList;
+
 public class WCodeEditor extends WPanel {
     private final CodeBuffer buffer;
     private final WNonFocusableScrollBar verticalScrollBar;
@@ -25,13 +27,11 @@ public class WCodeEditor extends WPanel {
     private boolean drawCaret = false;
     private int currentBorderColor;
 
-    public final EditorColors colors;
     public final EditorOptions options;
 
     public WCodeEditor() {
         super();
 
-        colors = new EditorColors();
         options = new EditorOptions();
         buffer = new CodeBuffer(this);
 
@@ -40,7 +40,7 @@ public class WCodeEditor extends WPanel {
         NavigationCommands.registerAll();
         EditionCommands.registerAll();
 
-        currentBorderColor = colors.borderNormal;
+        currentBorderColor = EditorColors.BORDER_NORMAL;
 
         verticalScrollBar = new WNonFocusableScrollBar(Axis.VERTICAL);
         verticalScrollBar.setValue(0);
@@ -87,7 +87,7 @@ public class WCodeEditor extends WPanel {
             y + options.borderThickness,
             getWidth() - options.borderThickness * 2 - verticalScrollBar.getWidth(),
             getHeight() - options.borderThickness * 2,
-            colors.background
+            EditorColors.BACKGROUND
         );
 
         Scissors.push(
@@ -103,7 +103,7 @@ public class WCodeEditor extends WPanel {
                 y + caretY + options.verticalMargin + options.borderThickness - 1,
                 getWidth() - (options.horizontalMargin + options.borderThickness) * 2 - verticalScrollBar.getWidth(),
                 textRenderer.fontHeight + 1,
-                colors.lineHighlighter
+                EditorColors.LINE_HIGHLIGHT
             );
         }
 
@@ -116,13 +116,30 @@ public class WCodeEditor extends WPanel {
                 break;
             }
 
-            ScreenDrawing.drawString(
-                matrices,
-                line.getText(),
-                x + options.horizontalMargin + options.borderThickness + 1,
-                y + (i * (textRenderer.fontHeight + options.lineSpacing)) + options.verticalMargin + options.borderThickness + 1,
-                colors.foreground
-            );
+            if (options.syntaxColoringEnabled) {
+                int offset = 0;
+                ArrayList<SyntaxSegment> segments = SyntaxHighlighter.highlightLine(line);
+
+                for (SyntaxSegment seg : segments) {
+                    ScreenDrawing.drawString(
+                        matrices,
+                        seg.text,
+                        x + options.horizontalMargin + options.borderThickness + 1 + offset,
+                        y + (i * (textRenderer.fontHeight + options.lineSpacing)) + options.verticalMargin + options.borderThickness + 1,
+                        seg.foregroundColor
+                    );
+
+                    offset += seg.pixelWidth;
+                }
+            } else {
+                ScreenDrawing.drawString(
+                    matrices,
+                    line.getText(),
+                    x + options.horizontalMargin + options.borderThickness + 1,
+                    y + (i * (textRenderer.fontHeight + options.lineSpacing)) + options.verticalMargin + options.borderThickness + 1,
+                    EditorColors.TEXT_FOREGROUND
+                );
+            }
         }
 
         if (drawCaret && isFocused()) {
@@ -131,7 +148,7 @@ public class WCodeEditor extends WPanel {
                 y + caretY + options.verticalMargin + options.borderThickness - 1,
                 options.caretThickness,
                 textRenderer.fontHeight + 1,
-                colors.caret
+                EditorColors.CARET
             );
         }
         Scissors.pop();
@@ -228,13 +245,13 @@ public class WCodeEditor extends WPanel {
     @Override
     public void onFocusGained() {
         super.onFocusGained();
-        currentBorderColor = colors.borderFocused;
+        currentBorderColor = EditorColors.BORDER_FOCUSED;
     }
 
     @Override
     public void onFocusLost() {
         super.onFocusLost();
-        currentBorderColor = colors.borderNormal;
+        currentBorderColor = EditorColors.BORDER_NORMAL;
     }
 
     @Override

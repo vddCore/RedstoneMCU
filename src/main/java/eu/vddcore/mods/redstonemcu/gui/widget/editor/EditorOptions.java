@@ -3,6 +3,7 @@ package eu.vddcore.mods.redstonemcu.gui.widget.editor;
 public class EditorOptions {
     public boolean autoIndent = true;
     public boolean highlightCurrentLine = true;
+    public boolean syntaxColoringEnabled = true;
 
     public int caretBlinkingFrequency = 10;
     public int caretThickness = 1;
