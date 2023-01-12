@@ -91,9 +91,9 @@ public class McuIdeController extends SyncedGuiDescription {
         root.add(eastPortStatusLabel, 0, 4);
 
         WCodeEditor codeEditor = new WCodeEditor();
-        codeEditor.setSize(240, 320);
-
-        root.add(codeEditor, 5, 1, 16, 16);
+        WLabel codeEditorTitle = new WLabel("ROM Chip Assembly");
+        root.add(codeEditorTitle, 6, 1);
+        root.add(codeEditor, 6, 2, 12, 8);
         root.validate(this);
     }
 }

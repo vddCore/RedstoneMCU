@@ -40,13 +40,14 @@ public class CodeBuffer {
             currentLineIndex--;
     }
 
-    public void insertNewLineBeforeCurrent() {
-        lines.add(currentLineIndex, new CodeBufferLine());
+    public void insertNewLineAfterCurrent(boolean goToNext) {
+        lines.add(currentLineIndex + 1, new CodeBufferLine());
+        if (goToNext) currentLineIndex++;
     }
 
-    public void insertNewLineAfterCurrent() {
-        lines.add(currentLineIndex + 1, new CodeBufferLine());
-        nextLine();
+    public void insertNewLineBeforeCurent(boolean goToNext) {
+        lines.add(currentLineIndex, new CodeBufferLine());
+        if (goToNext) currentLineIndex++;
     }
 
     public void removeLine() {

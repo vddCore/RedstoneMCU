@@ -33,7 +33,11 @@ public class CodeBufferLine {
     }
 
     public void removeAtCaret() {
-        removeAt(caretPosition--);
+        removeAt(--caretPosition);
+    }
+
+    public void removeFromEnd() {
+        text = text.substring(0, text.length() - 1);
     }
 
     public void insertAtCaret(char c) {

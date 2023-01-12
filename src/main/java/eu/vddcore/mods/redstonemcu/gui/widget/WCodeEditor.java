@@ -1,5 +1,6 @@
 package eu.vddcore.mods.redstonemcu.gui.widget;
 
+import io.github.cottonmc.cotton.gui.client.Scissors;
 import io.github.cottonmc.cotton.gui.client.ScreenDrawing;
 import io.github.cottonmc.cotton.gui.widget.WWidget;
 import net.fabricmc.api.EnvType;
@@ -9,18 +10,17 @@ import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.util.math.MatrixStack;
 import org.lwjgl.glfw.GLFW;
 
-import java.util.ArrayList;
-
 public class WCodeEditor extends WWidget {
     private final int CARET_BLINK_THRESHOLD = 10;
     private final int CARET_THICKNESS = 1;
 
     private final int EDITOR_BACKGROUND = 0xFF1E1E1E;
-    private final int EDITOR_FOREGROUND = 0xFFAAAAAA;
-    private final int EDITOR_CARET_COLOR = 0xFFBBBBBB;
+    private final int EDITOR_FOREGROUND = 0xFFCCCCCC;
+    private final int EDITOR_CARET_COLOR = 0xFFCCCCCC;
 
     private final int LINE_SPACING = 1;
-    private final int MARGIN = 2;
+    private final int MARGIN_X = 4;
+    private final int MARGIN_Y = 6;
 
     private final CodeBuffer buffer;
     private int caretTicker = 0;
@@ -46,19 +46,22 @@ public class WCodeEditor extends WWidget {
         TextRenderer textRenderer = MinecraftClient.getInstance().textRenderer;
         int lineCount = buffer.getLineCount();
 
-        ScreenDrawing.coloredRect(x, y, getWidth(), getHeight(), EDITOR_BACKGROUND);
+        ScreenDrawing.coloredRect(x, y, getWidth(), getHeight(), 0xFFFFFFFF);
+        ScreenDrawing.coloredRect(x + 2, y + 2, getWidth() - 4, getHeight() - 4, EDITOR_BACKGROUND);
 
+        Scissors.push(x + 2, y + 2, getWidth() - 4, getHeight() - 4);
         for (int i = 0; i < lineCount; i++) {
             CodeBufferLine line = buffer.getLine(i);
-            ScreenDrawing.drawString(matrices, line.text, x + MARGIN, y + (i * textRenderer.fontHeight) + LINE_SPACING, EDITOR_FOREGROUND);
+            ScreenDrawing.drawString(matrices, line.text, x + MARGIN_X, y + (i * (textRenderer.fontHeight + LINE_SPACING)) + MARGIN_Y, EDITOR_FOREGROUND);
         }
 
-        if (drawCaret) {
+        if (drawCaret && isFocused()) {
             int caretX = textRenderer.getWidth(buffer.getCurrentLine().textUntilCaret());
-            int caretY = buffer.getCurrentLineIndex() * textRenderer.fontHeight;
+            int caretY = buffer.getCurrentLineIndex() * (textRenderer.fontHeight + LINE_SPACING);
 
-            ScreenDrawing.coloredRect(x + caretX + MARGIN, y + caretY + MARGIN - 2, CARET_THICKNESS, textRenderer.fontHeight, EDITOR_CARET_COLOR);
+            ScreenDrawing.coloredRect(x + caretX + MARGIN_X, y + caretY + MARGIN_Y - 1, CARET_THICKNESS, textRenderer.fontHeight, EDITOR_CARET_COLOR);
         }
+        Scissors.pop();
     }
 
     @Override
@@ -104,6 +107,12 @@ public class WCodeEditor extends WWidget {
                 break;
             case GLFW.GLFW_KEY_BACKSPACE:
                 handleBackspace();
+                break;
+            case GLFW.GLFW_KEY_HOME:
+                buffer.getCurrentLine().goToStart();
+                break;
+            case GLFW.GLFW_KEY_END:
+                buffer.getCurrentLine().goToEnd();
                 break;
             case GLFW.GLFW_KEY_ENTER:
             case GLFW.GLFW_KEY_KP_ENTER:
@@ -170,6 +179,9 @@ public class WCodeEditor extends WWidget {
             currentLine = buffer.getCurrentLine();
             currentLine.goToEnd();
             currentLine.mergeWith(text);
+        } else if (currentLine.isCaretAtEnd()) {
+            currentLine.removeFromEnd();
+            currentLine.moveCaretLeft();
         } else {
             currentLine.removeAtCaret();
         }
@@ -177,16 +189,15 @@ public class WCodeEditor extends WWidget {
 
     private void handleEnter() {
         CodeBufferLine currentLine = buffer.getCurrentLine();
-
-        if (currentLine.isCaretAtStart()) {
-            buffer.insertNewLineBeforeCurrent();
-        } else if (currentLine.isCaretAtEnd()) {
-            buffer.insertNewLineAfterCurrent();
+        if (currentLine.isCaretAtEnd()) {
+            buffer.insertNewLineAfterCurrent(true);
+        } else if (currentLine.isCaretAtStart()) {
+            buffer.insertNewLineBeforeCurent(true);
         } else {
             String text = currentLine.textFromCaretOnwards();
             currentLine.setText(currentLine.textUntilCaret());
 
-            buffer.insertNewLineAfterCurrent();
+            buffer.insertNewLineAfterCurrent(true);
             currentLine = buffer.getCurrentLine();
             currentLine.mergeWith(text);
         }
