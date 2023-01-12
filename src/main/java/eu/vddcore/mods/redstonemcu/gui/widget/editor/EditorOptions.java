@@ -4,7 +4,7 @@ public class EditorOptions {
     public boolean autoIndent = true;
     public boolean highlightCurrentLine = true;
 
-    public int caretBlinkingFrequency = 500;
+    public int caretBlinkingFrequency = 10;
     public int caretThickness = 1;
 
     public int borderThickness = 1;
