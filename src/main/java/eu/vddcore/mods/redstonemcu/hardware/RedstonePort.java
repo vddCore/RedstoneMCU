@@ -1,6 +1,6 @@
 package eu.vddcore.mods.redstonemcu.hardware;
 
-import eu.vddcore.mods.redstonemcu.blockentity.BlockEntityMcu;
+import eu.vddcore.mods.redstonemcu.entity.BlockEntityMcu;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.util.math.Direction;
 

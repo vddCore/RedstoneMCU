@@ -1,13 +1,11 @@
 package eu.vddcore.mods.redstonemcu.items;
 
-import eu.vddcore.mods.redstonemcu.blockentity.BlockEntityMcu;
+import eu.vddcore.mods.redstonemcu.entity.BlockEntityMcu;
 import eu.vddcore.mods.redstonemcu.debug.DebuggerOperationMode;
 import eu.vddcore.mods.redstonemcu.hardware.PortMode;
 import eu.vddcore.mods.redstonemcu.hardware.RedstonePort;
 import net.minecraft.block.entity.BlockEntity;
-import net.minecraft.client.gui.screen.ingame.BookEditScreen;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.BookItem;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.ItemUsageContext;
 import net.minecraft.text.LiteralText;
@@ -66,9 +64,13 @@ public class ItemDebugger extends ItemBase {
                     return ActionResult.SUCCESS;
                 } else if (operationMode.equals(DebuggerOperationMode.ROTATE_REDSTONE_LEVEL)) {
                     RedstonePort port = mcuEntity.getRedstonePort(context.getSide());
-                    port.setRedstonePowerLevel((port.getRedstonePowerLevel() + 1) % 16);
 
-                    return ActionResult.SUCCESS;
+                    if (port != null) {
+                        port.setRedstonePowerLevel((port.getRedstonePowerLevel() + 1) % 16);
+                        return ActionResult.SUCCESS;
+                    } else {
+                        return ActionResult.FAIL;
+                    }
                 }
             }
 

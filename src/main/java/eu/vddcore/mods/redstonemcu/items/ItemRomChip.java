@@ -1,6 +1,6 @@
 package eu.vddcore.mods.redstonemcu.items;
 
-import eu.vddcore.mods.redstonemcu.blockentity.BlockEntityMcu;
+import eu.vddcore.mods.redstonemcu.entity.BlockEntityMcu;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.item.ItemUsageContext;
 import net.minecraft.util.ActionResult;

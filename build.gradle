@@ -15,6 +15,11 @@ repositories {
         name = "CottonMC"
         url = "https://server.bbkr.space/artifactory/libs-release"
     }
+
+    maven {
+        name = "Spinnery"
+        url  "https://dl.bintray.com/spinnery/Spinnery"
+    }
 }
 
 dependencies {
@@ -23,7 +28,7 @@ dependencies {
     modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
 
     modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
-    modImplementation "io.github.cottonmc:LibGui:2.3.0+1.16.1"
+    modImplementation "io.github.cottonmc:LibGui:${project.libgui_version}"
 }
 
 processResources {

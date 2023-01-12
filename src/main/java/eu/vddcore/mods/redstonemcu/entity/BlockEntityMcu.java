@@ -1,11 +1,20 @@
-package eu.vddcore.mods.redstonemcu.blockentity;
+package eu.vddcore.mods.redstonemcu.entity;
 
-import eu.vddcore.mods.redstonemcu.RedstoneMcu;
+import eu.vddcore.mods.redstonemcu.gui.McuIdeController;
 import eu.vddcore.mods.redstonemcu.hardware.PortMode;
 import eu.vddcore.mods.redstonemcu.hardware.RedstonePort;
+import eu.vddcore.mods.redstonemcu.registry.EntityRegistry;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.entity.BlockEntity;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.screen.NamedScreenHandlerFactory;
+import net.minecraft.screen.ScreenHandler;
+import net.minecraft.screen.ScreenHandlerContext;
+import net.minecraft.text.LiteralText;
+import net.minecraft.text.Text;
+import net.minecraft.text.TranslatableText;
 import net.minecraft.util.Tickable;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
@@ -15,12 +24,13 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public class BlockEntityMcu extends BlockEntity implements Tickable {
+public class BlockEntityMcu extends BlockEntity implements Tickable, NamedScreenHandlerFactory {
 
     private final List<RedstonePort> ports;
+    public LiteralText statusText;
 
     public BlockEntityMcu() {
-        super(RedstoneMcu.BLOCK_MCU_ENTITY);
+        super(EntityRegistry.BLOCK_MCU_ENTITY);
 
         ports = Stream.of(
             new RedstonePort(this, Direction.NORTH),
@@ -28,6 +38,8 @@ public class BlockEntityMcu extends BlockEntity implements Tickable {
             new RedstonePort(this, Direction.SOUTH),
             new RedstonePort(this, Direction.EAST)
         ).collect(Collectors.toList());
+
+        statusText = new LiteralText("status unavailable");
     }
 
     @Override
@@ -39,6 +51,7 @@ public class BlockEntityMcu extends BlockEntity implements Tickable {
 
         BlockPos pos = getPos();
 
+        StringBuilder text = new StringBuilder();
         for (RedstonePort p : ports) {
             if (p != null) {
                 PortMode mode = p.getMode();
@@ -62,8 +75,17 @@ public class BlockEntityMcu extends BlockEntity implements Tickable {
                         p.setRedstonePowerLevel(0);
                     }
                 }
+
+                text.append(portDirection.toString())
+                    .append(" [")
+                    .append(mode.toString())
+                    .append("]: ")
+                    .append(p.getRedstonePowerLevel())
+                    .append("\n");
             }
         }
+
+        statusText = new LiteralText(text.toString());
     }
 
     @Override
@@ -99,5 +121,15 @@ public class BlockEntityMcu extends BlockEntity implements Tickable {
         }
 
         return null;
+    }
+
+    @Override
+    public Text getDisplayName() {
+        return new TranslatableText(getCachedState().getBlock().getTranslationKey());
+    }
+
+    @Override
+    public ScreenHandler createMenu(int syncId, PlayerInventory inv, PlayerEntity player) {
+        return new McuIdeController(syncId, inv, ScreenHandlerContext.create(world, pos));
     }
 }

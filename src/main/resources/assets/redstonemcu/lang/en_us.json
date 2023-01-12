@@ -1,4 +1,5 @@
 {
+  "block.redstonemcu.mcu_block_standard": "Standard MCU",
   "item.redstonemcu.mcu_standard": "Standard MCU",
   "item.redstonemcu.mcu_debugger": "Advanced Microcontroller Debugger",
   "item.redstonemcu.rom_chip": "ROM Chip"
