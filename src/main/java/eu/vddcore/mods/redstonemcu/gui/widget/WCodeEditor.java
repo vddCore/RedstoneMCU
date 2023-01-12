@@ -12,7 +12,6 @@ import io.github.cottonmc.cotton.gui.widget.data.Axis;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.util.math.MatrixStack;
 import org.lwjgl.glfw.GLFW;
 
@@ -21,7 +20,6 @@ import java.util.ArrayList;
 public class WCodeEditor extends WPanel {
     private final CodeBuffer buffer;
     private final WNonFocusableScrollBar verticalScrollBar;
-    private final TextRenderer textRenderer;
 
     private int caretTicker = 0;
     private boolean drawCaret = false;
@@ -34,8 +32,6 @@ public class WCodeEditor extends WPanel {
 
         options = new EditorOptions();
         buffer = new CodeBuffer(this);
-
-        textRenderer = MinecraftClient.getInstance().textRenderer;
 
         NavigationCommands.registerAll();
         EditionCommands.registerAll();
@@ -62,8 +58,12 @@ public class WCodeEditor extends WPanel {
         return buffer.getText();
     }
 
+    public void loadText(String text) {
+        buffer.loadText(text);
+    }
+
     public int getMaxDisplayableLines() {
-        int heightPerLine = textRenderer.fontHeight + options.lineSpacing;
+        int heightPerLine = MinecraftClient.getInstance().textRenderer.fontHeight + options.lineSpacing;
         int usableHeight = getHeight() - options.verticalMargin * 2 - options.borderThickness * 2;
 
         return usableHeight / heightPerLine;
@@ -78,8 +78,15 @@ public class WCodeEditor extends WPanel {
     public void paint(MatrixStack matrices, int x, int y, int mouseX, int mouseY) {
         buffer.setWindowTop(verticalScrollBar.getValue());
 
-        int caretX = textRenderer.getWidth(buffer.getCurrentLine().textUntilCaret());
-        int caretY = (buffer.getCurrentLineIndex() - buffer.getWindowTop()) * (textRenderer.fontHeight + options.lineSpacing);
+        verticalScrollBar.setWindow(
+            MinecraftClient.getInstance().textRenderer.fontHeight +
+                options.verticalMargin +
+                options.borderThickness +
+                options.lineSpacing + 2
+        );
+
+        int caretX = MinecraftClient.getInstance().textRenderer.getWidth(buffer.getCurrentLine().textUntilCaret());
+        int caretY = (buffer.getCurrentLineIndex() - buffer.getWindowTop()) * (MinecraftClient.getInstance().textRenderer.fontHeight + options.lineSpacing);
 
         ScreenDrawing.coloredRect(x, y, getWidth(), getHeight(), currentBorderColor);
         ScreenDrawing.coloredRect(
@@ -102,7 +109,7 @@ public class WCodeEditor extends WPanel {
                 x + options.horizontalMargin + options.borderThickness,
                 y + caretY + options.verticalMargin + options.borderThickness - 1,
                 getWidth() - (options.horizontalMargin + options.borderThickness) * 2 - verticalScrollBar.getWidth(),
-                textRenderer.fontHeight + 1,
+                MinecraftClient.getInstance().textRenderer.fontHeight + 1,
                 EditorColors.LINE_HIGHLIGHT
             );
         }
@@ -125,7 +132,7 @@ public class WCodeEditor extends WPanel {
                         matrices,
                         seg.text,
                         x + options.horizontalMargin + options.borderThickness + 1 + offset,
-                        y + (i * (textRenderer.fontHeight + options.lineSpacing)) + options.verticalMargin + options.borderThickness + 1,
+                        y + (i * (MinecraftClient.getInstance().textRenderer.fontHeight + options.lineSpacing)) + options.verticalMargin + options.borderThickness + 1,
                         seg.foregroundColor
                     );
 
@@ -136,7 +143,7 @@ public class WCodeEditor extends WPanel {
                     matrices,
                     line.getText(),
                     x + options.horizontalMargin + options.borderThickness + 1,
-                    y + (i * (textRenderer.fontHeight + options.lineSpacing)) + options.verticalMargin + options.borderThickness + 1,
+                    y + (i * (MinecraftClient.getInstance().textRenderer.fontHeight + options.lineSpacing)) + options.verticalMargin + options.borderThickness + 1,
                     EditorColors.TEXT_FOREGROUND
                 );
             }
@@ -147,7 +154,7 @@ public class WCodeEditor extends WPanel {
                 x + caretX + options.horizontalMargin + options.borderThickness,
                 y + caretY + options.verticalMargin + options.borderThickness - 1,
                 options.caretThickness,
-                textRenderer.fontHeight + 1,
+                MinecraftClient.getInstance().textRenderer.fontHeight + 1,
                 EditorColors.CARET
             );
         }
@@ -166,13 +173,6 @@ public class WCodeEditor extends WPanel {
         } else {
             caretTicker++;
         }
-
-        verticalScrollBar.setWindow(
-            textRenderer.fontHeight +
-                options.verticalMargin +
-                options.borderThickness +
-                options.lineSpacing + 2
-        );
     }
 
     @Override
@@ -187,18 +187,6 @@ public class WCodeEditor extends WPanel {
     @Override
     public void onClick(int x, int y, int button) {
         super.onClick(x, y, button);
-
-        int clickableArea = options.borderThickness + options.verticalMargin;
-        if (y > clickableArea && y < getHeight() - clickableArea * 2) {
-            int index = y / textRenderer.fontHeight - 1;
-
-            if (index < 0)
-                index = 0;
-
-            if (index < buffer.getLineCount()) {
-                buffer.setCurrentLineIndex(buffer.getWindowTop() + index);
-            }
-        }
 
         if (button == GLFW.GLFW_MOUSE_BUTTON_1) {
             requestFocus();
@@ -218,7 +206,6 @@ public class WCodeEditor extends WPanel {
             cmd.execute(this, buffer);
 
         verticalScrollBar.setMaxValue(buffer.getLineCount());
-        buffer.updateViewport();
     }
 
     @Override

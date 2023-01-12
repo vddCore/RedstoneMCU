@@ -17,9 +17,19 @@ public class CodeBuffer {
         this.editor = editor;
 
         lines = new ArrayList<>();
-        lines.add(new CodeBufferLine());
+        lines.add(new CodeBufferLine(this));
 
         currentLineIndex = 0;
+    }
+
+    public void loadText(String text) {
+        lines.clear();
+
+        for (String s : text.split("\\r?\\n")) {
+            CodeBufferLine line = new CodeBufferLine(this);
+            line.setText(s);
+            lines.add(line);
+        }
     }
 
     public CodeBufferLine getLine(int i) {
@@ -96,12 +106,12 @@ public class CodeBuffer {
     }
 
     public void insertNewLineAfterCurrent(boolean goToNext) {
-        lines.add(currentLineIndex + 1, new CodeBufferLine());
+        lines.add(currentLineIndex + 1, new CodeBufferLine(this));
         if (goToNext) currentLineIndex++;
     }
 
     public void insertNewLineBeforeCurrent(boolean goToNext) {
-        lines.add(currentLineIndex, new CodeBufferLine());
+        lines.add(currentLineIndex, new CodeBufferLine(this));
         if (goToNext) currentLineIndex++;
     }
 
@@ -123,6 +133,13 @@ public class CodeBuffer {
     }
 
     public String getText() {
-        return lines.stream().map(CodeBufferLine::getText).collect(Collectors.joining("\n"));
+        StringBuilder sb = new StringBuilder();
+
+        for (CodeBufferLine line : lines) {
+            sb.append(line.getText());
+            sb.append('\n');
+        }
+
+        return sb.toString();
     }
 }

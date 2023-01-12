@@ -8,6 +8,7 @@ import net.fabricmc.fabric.api.network.ServerSidePacketRegistry;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
 
 public class PacketRegistry {
@@ -24,6 +25,23 @@ public class PacketRegistry {
                     if (screen instanceof McuIdeScreen) {
                         McuIdeScreen mcuIdeScreen = (McuIdeScreen) screen;
                         mcuIdeScreen.getScreenHandler().updateMcuStatusText(text);
+                    }
+                });
+            }
+        );
+
+        ClientSidePacketRegistry.INSTANCE.register(
+            Identifiers.SCP_MCU_SOURCE_CODE,
+            (packetContext, packetByteBuf) -> {
+                int codeLength = packetByteBuf.readInt();
+                String code = packetByteBuf.readString(codeLength);
+
+                packetContext.getTaskQueue().execute(() -> {
+                    Screen screen = MinecraftClient.getInstance().currentScreen;
+
+                    if (screen instanceof McuIdeScreen) {
+                        McuIdeScreen mcuIdeScreen = (McuIdeScreen)screen;
+                        mcuIdeScreen.getScreenHandler().loadText(code);
                     }
                 });
             }
@@ -51,12 +69,15 @@ public class PacketRegistry {
             Identifiers.CSP_MCU_IDE_CLOSED,
             (packetContext, packetByteBuf) -> {
                 BlockPos blockPos = packetByteBuf.readBlockPos();
+                int codeLength = packetByteBuf.readInt();
+                String code = packetByteBuf.readString(codeLength);
 
                 packetContext.getTaskQueue().execute(() -> {
                     BlockEntity be = packetContext.getPlayer().getEntityWorld().getBlockEntity(blockPos);
 
                     if (be instanceof BlockEntityMcu) {
                         BlockEntityMcu mcuEntity = (BlockEntityMcu) be;
+                        mcuEntity.setCode(code);
                         mcuEntity.setCurrentlyInteractingPlayer(null);
                     }
                 });

@@ -4,10 +4,10 @@ import eu.vddcore.mods.redstonemcu.Identifiers;
 import eu.vddcore.mods.redstonemcu.gui.widget.WCodeEditor;
 import eu.vddcore.mods.redstonemcu.registry.ScreenTypeRegistry;
 import io.github.cottonmc.cotton.gui.SyncedGuiDescription;
-import io.github.cottonmc.cotton.gui.widget.*;
+import io.github.cottonmc.cotton.gui.widget.WGridPanel;
+import io.github.cottonmc.cotton.gui.widget.WLabel;
 import io.netty.buffer.Unpooled;
 import net.fabricmc.fabric.api.network.ClientSidePacketRegistry;
-import net.fabricmc.fabric.api.util.TriState;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.network.PacketByteBuf;
@@ -20,6 +20,7 @@ public class McuIdeController extends SyncedGuiDescription {
     private WLabel eastPortStatusLabel;
     private WLabel southPortStatusLabel;
     private WLabel westPortStatusLabel;
+    private WCodeEditor codeEditor;
 
     private final BlockPos blockPos;
 
@@ -65,12 +66,27 @@ public class McuIdeController extends SyncedGuiDescription {
         eastPortStatusLabel.setText(new LiteralText(segments[3]));
     }
 
+    public void loadText(String code) {
+        if (!world.isClient()) return;
+
+        if (code != null) {
+            codeEditor.loadText(code);
+        }
+    }
+
     @Override
     public void close(PlayerEntity player) {
         if (player.getEntityWorld().isClient()) {
             PacketByteBuf buf = new PacketByteBuf(Unpooled.buffer());
             buf.writeBlockPos(blockPos);
-            ClientSidePacketRegistry.INSTANCE.sendToServer(Identifiers.CSP_MCU_IDE_CLOSED, buf);
+
+            String code = codeEditor.getText();
+            if (code != null) {
+                buf.writeInt(code.length());
+                buf.writeString(code);
+
+                ClientSidePacketRegistry.INSTANCE.sendToServer(Identifiers.CSP_MCU_IDE_CLOSED, buf);
+            }
         }
 
         super.close(player);
@@ -91,7 +107,7 @@ public class McuIdeController extends SyncedGuiDescription {
         root.add(southPortStatusLabel, 0, 3);
         root.add(eastPortStatusLabel, 0, 4);
 
-        WCodeEditor codeEditor = new WCodeEditor();
+        codeEditor = new WCodeEditor();
         WLabel codeEditorTitle = new WLabel("ROM Chip Assembly");
 
         root.add(codeEditorTitle, 6, 1);

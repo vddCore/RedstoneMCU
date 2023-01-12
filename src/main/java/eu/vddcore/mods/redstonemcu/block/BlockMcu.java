@@ -1,14 +1,18 @@
 package eu.vddcore.mods.redstonemcu.block;
 
+import eu.vddcore.mods.redstonemcu.Identifiers;
 import eu.vddcore.mods.redstonemcu.entity.BlockEntityMcu;
 import eu.vddcore.mods.redstonemcu.hardware.PortMode;
 import eu.vddcore.mods.redstonemcu.hardware.RedstonePort;
+import io.netty.buffer.Unpooled;
+import net.fabricmc.fabric.api.network.ServerSidePacketRegistry;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockEntityProvider;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.ShapeContext;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.network.PacketByteBuf;
 import net.minecraft.screen.NamedScreenHandlerFactory;
 import net.minecraft.sound.BlockSoundGroup;
 import net.minecraft.text.LiteralText;
@@ -40,6 +44,16 @@ public class BlockMcu extends Block implements BlockEntityProvider {
         if (!world.isClient() && player.getStackInHand(Hand.MAIN_HAND).isEmpty()) {
             if (mcuEntity.getCurrentlyInteractingPlayer() == null) {
                 player.openHandledScreen(state.createScreenHandlerFactory(world, pos));
+
+                String code = mcuEntity.getCode();
+                if (code != null) {
+                    PacketByteBuf buf = new PacketByteBuf(Unpooled.buffer());
+
+                    buf.writeInt(code.length());
+                    buf.writeString(code);
+                    ServerSidePacketRegistry.INSTANCE.sendToPlayer(player, Identifiers.SCP_MCU_SOURCE_CODE, buf);
+                }
+
                 return ActionResult.SUCCESS;
             } else {
                 player.sendMessage(new LiteralText("This MCU is currently being used by someone else."), true);

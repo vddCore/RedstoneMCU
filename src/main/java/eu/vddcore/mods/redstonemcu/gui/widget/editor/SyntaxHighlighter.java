@@ -15,6 +15,10 @@ public class SyntaxHighlighter {
         keywords.add("jne");
         keywords.add("push");
         keywords.add("pop");
+        keywords.add("sub");
+        keywords.add("add");
+        keywords.add("jz");
+        keywords.add("jnz");
     }
 
     public static ArrayList<SyntaxSegment> highlightLine(CodeBufferLine line) {
@@ -36,8 +40,18 @@ public class SyntaxHighlighter {
 
         while (i < text.length()) {
             ch = text.charAt(i);
-            token.append(ch);
 
+            if (ch == '#') {
+                while (i < text.length()) {
+                    ch = text.charAt(i);
+
+                    token.append(ch);
+                    i++;
+                }
+                break;
+            }
+
+            token.append(ch);
             if (Character.isWhitespace(ch)) {
                 segments.add(buildSyntaxSegment(token.toString()));
                 token = new StringBuilder();
@@ -57,6 +71,8 @@ public class SyntaxHighlighter {
 
         if (keywords.contains(text.trim().toLowerCase())) {
             color = EditorColors.KEYWORD_FOREGROUND;
+        } else if (text.trim().startsWith("#")) {
+            color = 0xFF006600;
         } else if (text.trim().endsWith(":")) {
             color = EditorColors.LABEL_FOREGROUND;
         } else if (text.trim().startsWith("0x")) {
@@ -65,8 +81,13 @@ public class SyntaxHighlighter {
                 color = EditorColors.NUMERAL_FOREGROUND;
             } catch (Exception ignored) {
             }
-        }
-        else {
+        } else if (text.trim().endsWith("b")) {
+            try {
+                Integer.parseInt(text.trim().substring(0, text.trim().length() - 1), 2);
+                color = EditorColors.NUMERAL_FOREGROUND;
+            } catch (Exception ignored) {
+            }
+        } else {
             try {
                 Integer.parseInt(text.trim());
                 color = EditorColors.NUMERAL_FOREGROUND;

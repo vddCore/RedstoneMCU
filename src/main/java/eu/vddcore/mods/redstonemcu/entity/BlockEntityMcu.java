@@ -31,7 +31,10 @@ import java.util.stream.Stream;
 
 public class BlockEntityMcu extends BlockEntity implements Tickable, ExtendedScreenHandlerFactory {
 
+    private final String NBT_CODE_KEY = "assembly_code";
+
     private final List<RedstonePort> ports;
+    private String code;
     private PlayerEntity interactingPlayer;
 
     public BlockEntityMcu() {
@@ -99,12 +102,22 @@ public class BlockEntityMcu extends BlockEntity implements Tickable, ExtendedScr
         }
     }
 
+    public void setCode(String code) {
+        this.code = code;
+    }
+
+    public String getCode() {
+        return this.code;
+    }
+
     @Override
     public void fromTag(BlockState state, CompoundTag tag) {
         super.fromTag(state, tag);
 
         for (RedstonePort p : ports)
             p.readNbt(tag);
+
+        setCode(tag.getString(NBT_CODE_KEY));
     }
 
     @Override
@@ -113,6 +126,8 @@ public class BlockEntityMcu extends BlockEntity implements Tickable, ExtendedScr
 
         for (RedstonePort p : ports)
             p.writeNbt(tag);
+
+        tag.putString(NBT_CODE_KEY, getCode());
 
         return tag;
     }

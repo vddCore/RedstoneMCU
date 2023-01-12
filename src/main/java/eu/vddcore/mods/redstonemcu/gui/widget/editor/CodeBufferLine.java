@@ -5,8 +5,14 @@ import net.fabricmc.api.Environment;
 import net.minecraft.client.MinecraftClient;
 
 public class CodeBufferLine {
+    private final CodeBuffer buffer;
+
     private String text = "";
     private int caretPosition = 0;
+
+    public CodeBufferLine(CodeBuffer buffer) {
+        this.buffer = buffer;
+    }
 
     public void insertAt(int i, char c) {
         String pre = text.substring(0, i);

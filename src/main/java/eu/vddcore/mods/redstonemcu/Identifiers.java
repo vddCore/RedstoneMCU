@@ -14,6 +14,7 @@ public class Identifiers {
     public static final Identifier MCU_DEBUGGER_ID = new Identifier(MOD_ID, "mcu_debugger");
 
     // SCP: SERVER->CLIENT Packet
+    public static final Identifier SCP_MCU_SOURCE_CODE = new Identifier(MOD_ID, "packet_mcu_source_code");
     public static final Identifier SCP_MCU_STATUS_DATA = new Identifier(MOD_ID, "packet_mcu_status_data");
 
     // CSP: CLIENT->SERVER Packet
